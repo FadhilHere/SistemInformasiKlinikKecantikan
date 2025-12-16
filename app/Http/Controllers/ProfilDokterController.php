@@ -98,9 +98,9 @@ class ProfilDokterController extends Controller
 
         $data = Validator::make($request->all(), [
             'nama' => 'bail|sometimes|required|string|max:60',
-            'foto' => 'bail|nullable|image|mimes:jpg,jpeg,png|max:2048', // max 2MB, only images
+            'foto' => 'bail|sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048', // max 2MB, only images
             'email' => 'bail|sometimes|required|email:rfc,dns|unique:profilDokter,email,' . $id . ',idDokter',
-            'deskripsi' => 'bail|nullable|string|max:500',
+            'deskripsi' => 'bail|sometimes|nullable|string|max:500',
         ])->validate();
 
         $payload = $data;
@@ -113,7 +113,7 @@ class ProfilDokterController extends Controller
             $path = $request->file('foto')->store('profil-dokter', 'public');
             $payload['foto'] = $path;
         }
-
+        // dd($request->all());
         $dokter->update($payload);
 
         return response()->json([

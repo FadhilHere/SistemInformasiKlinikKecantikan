@@ -126,11 +126,11 @@ class ReservasiController extends Controller
 
         $rules = [
             'namaCustomer' => 'bail|sometimes|required|string|max:60',
-            'nomorWa' => 'bail|sometimes|required|regex:/^[0-9]{8,12}$/',
+            'nomorWa' => 'bail|sometimes|sometimes|regex:/^[0-9]{8,12}$/',
             'jenisTreatment' => 'bail|sometimes|required|string|max:60',
             'tanggalReservasi' => 'bail|sometimes|required|date',
-            'idDokter' => 'bail|sometimes|required|integer|exists:profilDokter,idDokter',
-            'idJadwal' => 'bail|sometimes|required|integer|exists:jadwalReservasi,idJadwal',
+            'idDokter' => 'bail|sometimes|sometimes|integer|exists:profilDokter,idDokter',
+            'idJadwal' => 'bail|sometimes|sometimes|integer|exists:jadwalReservasi,idJadwal',
         ];
 
         // Hanya admin yang boleh ubah status.
