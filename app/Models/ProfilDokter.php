@@ -8,7 +8,7 @@ class ProfilDokter extends Model
 {
     public $incrementing = true;
     public $timestamps = true;
-    protected $table = 'profilDokter';
+    protected $table = 'profildokter';
 
     protected $primaryKey = 'idDokter';
 
