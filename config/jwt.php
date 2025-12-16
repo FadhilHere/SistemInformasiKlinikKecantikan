@@ -101,7 +101,8 @@ return [
     |
     */
 
-    'ttl' => env('JWT_TTL', 60),
+    // TTL harus integer (menit). Cast ke int agar tidak error ketika env dikembalikan sebagai string.
+    'ttl' => (int) env('JWT_TTL', 60),
 
     /*
     |--------------------------------------------------------------------------
