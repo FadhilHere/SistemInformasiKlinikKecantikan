@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
 use App\Http\Controllers\ReservasiController;
+use App\Http\Controllers\UserManagementController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -45,4 +46,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/reservasi', [ReservasiController::class, 'store']);
     Route::put('/reservasi/{id}', [ReservasiController::class, 'update']);
     Route::delete('/reservasi/{id}', [ReservasiController::class, 'destroy']);
+
+    // CRUD user - hanya admin (dicek di controller)
+    Route::get('/users', [UserManagementController::class, 'index']);
+    Route::get('/users/{id}', [UserManagementController::class, 'show']);
+    Route::post('/users', [UserManagementController::class, 'store']);
+    Route::put('/users/{id}', [UserManagementController::class, 'update']);
+    Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
 });
