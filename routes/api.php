@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
+use App\Http\Controllers\ReservasiController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -37,4 +38,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/jadwal-reservasi', [JadwalReservasiController::class, 'store']);
     Route::put('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'update']);
     Route::delete('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'destroy']);
+
+    // CRUD reservasi - admin bisa semua, pelanggan hanya miliknya (dicek di controller)
+    Route::get('/reservasi', [ReservasiController::class, 'index']);
+    Route::get('/reservasi/{id}', [ReservasiController::class, 'show']);
+    Route::post('/reservasi', [ReservasiController::class, 'store']);
+    Route::put('/reservasi/{id}', [ReservasiController::class, 'update']);
+    Route::delete('/reservasi/{id}', [ReservasiController::class, 'destroy']);
 });
