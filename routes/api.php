@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ProfilPerusahaanController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -53,4 +54,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/users', [UserManagementController::class, 'store']);
     Route::put('/users/{id}', [UserManagementController::class, 'update']);
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
+
+    // CRUD profil perusahaan - hanya admin (dicek di controller)
+    Route::get('/profil-perusahaan', [ProfilPerusahaanController::class, 'index']);
+    Route::get('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'show']);
+    Route::post('/profil-perusahaan', [ProfilPerusahaanController::class, 'store']);
+    Route::put('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'update']);
+    Route::delete('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'destroy']);
 });
