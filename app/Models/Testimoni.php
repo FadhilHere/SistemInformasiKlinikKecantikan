@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Testimoni extends Model
 {
-    public $incementing = true;
+    public $incrementing = true;
 
     public $timestamps = true;
 
