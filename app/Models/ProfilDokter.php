@@ -8,7 +8,7 @@ class ProfilDokter extends Model
 {
     public $incrementing = true;
     public $timestamps = true;
-    protected $table = 'profildokter';
+    protected $table = 'profilDokter';
 
     protected $primaryKey = 'idDokter';
 
@@ -19,7 +19,8 @@ class ProfilDokter extends Model
         'deskripsi'
     ];
 
-    public function reservasi(){
-        return $this->hasMany(Reservasi::class,'idDokter');
+    public function reservasi()
+    {
+        return $this->hasMany(Reservasi::class, 'idDokter');
     }
 }
