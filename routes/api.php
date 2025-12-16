@@ -14,9 +14,9 @@ use App\Http\Controllers\PenjualanController;
 use App\Http\Controllers\DetailPenjualanController;
 use App\Http\Controllers\TestimoniController;
 use App\Http\Controllers\ProfilPerusahaanController;
-// use App\Http\Controllers\EventController; // Belum ada controllernya (dari log git)
-// use App\Http\Controllers\KegiatanController; // Belum ada controllernya
-// use App\Http\Controllers\PromoController; // Belum ada controllernya
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\KegiatanController;
+use App\Http\Controllers\PromoController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -68,6 +68,30 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/profil-perusahaan', [ProfilPerusahaanController::class, 'store']);
     Route::put('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'update']);
     Route::delete('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'destroy']);
+
+    // --- OTHER TEAM MEMBERS ROUTES ---
+
+    // CRUD event - hanya admin (dicek di controller)
+    Route::get('/event', [EventController::class, 'index']);
+    Route::get('/event/{id}', [EventController::class, 'show']);
+    Route::post('/event', [EventController::class, 'store']);
+    Route::put('/event/{id}', [EventController::class, 'update']);
+    Route::delete('/event/{id}', [EventController::class, 'destroy']);
+
+    // CRUD kegiatan - hanya admin (dicek di controller)
+    Route::get('/kegiatan', [KegiatanController::class, 'index']);
+    Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
+    Route::post('/kegiatan', [KegiatanController::class, 'store']);
+    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']);
+    Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
+
+    // CRUD promo - hanya admin (dicek di controller)
+    Route::get('/promo', [PromoController::class, 'index']);
+    Route::get('/promo/{id}', [PromoController::class, 'show']);
+    Route::post('/promo', [PromoController::class, 'store']);
+    Route::put('/promo/{id}', [PromoController::class, 'update']);
+    Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
+
 
     // --- NEW ROUTES (Bagian Hardy) ---
 

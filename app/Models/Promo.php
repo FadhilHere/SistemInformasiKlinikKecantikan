@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Promo extends Model
 {
+    use HasFactory;
+
     public $incrementing = true;
     public $timestamps = true;
 
@@ -24,6 +27,12 @@ class Promo extends Model
         'status',
         'idKategori',
         'idProduk'
+    ];
+
+    protected $casts = [
+        'tanggalMulai' => 'date',
+        'tanggalSelesai' => 'date',
+        'status' => 'boolean',
     ];
 
     public function kategori(){
