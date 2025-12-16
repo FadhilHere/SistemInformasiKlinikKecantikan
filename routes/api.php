@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\KategoriProdukController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -53,4 +54,15 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/users', [UserManagementController::class, 'store']);
     Route::put('/users/{id}', [UserManagementController::class, 'update']);
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
+});
+
+// Public routes untuk kategori produk (read-only)
+Route::get('/kategori-produk', [KategoriProdukController::class, 'index']);
+Route::get('/kategori-produk/{id}', [KategoriProdukController::class, 'show']);
+
+// Protected routes untuk kategori produk (admin only)
+Route::middleware('auth:api')->group(function () {
+    Route::post('/kategori-produk', [KategoriProdukController::class, 'store']);
+    Route::put('/kategori-produk/{id}', [KategoriProdukController::class, 'update']);
+    Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
 });
