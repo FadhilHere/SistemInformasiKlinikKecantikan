@@ -7,6 +7,10 @@ use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ProfilPerusahaanController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\KegiatanController;
+use App\Http\Controllers\PromoController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -53,4 +57,32 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/users', [UserManagementController::class, 'store']);
     Route::put('/users/{id}', [UserManagementController::class, 'update']);
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
+
+    // CRUD profil perusahaan - hanya admin (dicek di controller)
+    Route::get('/profil-perusahaan', [ProfilPerusahaanController::class, 'index']);
+    Route::get('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'show']);
+    Route::post('/profil-perusahaan', [ProfilPerusahaanController::class, 'store']);
+    Route::put('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'update']);
+    Route::delete('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'destroy']);
+
+    // CRUD event - hanya admin (dicek di controller)
+    Route::get('/event', [EventController::class, 'index']);
+    Route::get('/event/{id}', [EventController::class, 'show']);
+    Route::post('/event', [EventController::class, 'store']);
+    Route::put('/event/{id}', [EventController::class, 'update']);
+    Route::delete('/event/{id}', [EventController::class, 'destroy']);
+
+    // CRUD kegiatan - hanya admin (dicek di controller)
+    Route::get('/kegiatan', [KegiatanController::class, 'index']);
+    Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
+    Route::post('/kegiatan', [KegiatanController::class, 'store']);
+    Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']);
+    Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
+
+    // CRUD promo - hanya admin (dicek di controller)
+    Route::get('/promo', [PromoController::class, 'index']);
+    Route::get('/promo/{id}', [PromoController::class, 'show']);
+    Route::post('/promo', [PromoController::class, 'store']);
+    Route::put('/promo/{id}', [PromoController::class, 'update']);
+    Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
 });

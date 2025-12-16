@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
+    use HasFactory;
+
     public $incrementing = true;
     public $timestamps = true;
     protected $table = 'event';
@@ -19,4 +22,8 @@ class Event extends Model
         'lokasi'
     ];
 
+    protected $casts = [
+        'tanggalMulai' => 'date',
+        'tanggalSelesai' => 'date',
+    ];
 }
