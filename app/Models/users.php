@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class users extends Model
+class users extends Authenticatable implements JWTSubject
 {
-    public $incementing = true;
+    use HasFactory;
+
+    public $incrementing = true;
 
     public $timestamps = true;
 
@@ -25,6 +29,18 @@ class users extends Model
         'password'
     ];
 
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
+
     public function penjualan()
     {
         return $this->hasMany(Penjualan::class, 'idUser');
@@ -37,5 +53,15 @@ class users extends Model
     public function reservasi()
     {
         return $this->hasMany(Reservasi::class, 'idUser');
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
