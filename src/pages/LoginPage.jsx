@@ -5,7 +5,8 @@ const LoginPage = ({
   onShowLogin,
   onShowRegister,
   onShowLanding,
-  onNavigate
+  onNavigate,
+  onLoginSuccess
 }) => {
   return (
     <div className="min-h-screen bg-background">
@@ -17,7 +18,7 @@ const LoginPage = ({
         onNavigate={onNavigate}
       />
       <main className="flex justify-center px-4 py-14">
-        <LoginForm />
+        <LoginForm onLoginSuccess={onLoginSuccess} />
       </main>
     </div>
   )

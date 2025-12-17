@@ -8,7 +8,7 @@ const INITIAL_FORM = {
   password: ''
 }
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [formValues, setFormValues] = useState(INITIAL_FORM)
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -24,7 +24,13 @@ const LoginForm = () => {
       return
     }
 
-    setStatusMessage('Login berhasil disubmit (mock).')
+    if (formValues.email === 'as22si@mahsiswa.pcr.ac.id' && formValues.password === 'acop123') {
+        setStatusMessage('Login Berhasil!')
+        // Call callback immediately or after short delay
+        if (onLoginSuccess) onLoginSuccess()
+    } else {
+        setStatusMessage('Email atau password salah.')
+    }
   }
 
   return (

@@ -2,7 +2,7 @@ import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import Button from '../components/atoms/Button'
 
-const AboutPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding }) => {
+const AboutPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, isLoggedIn }) => {
   return (
     <div className="min-h-screen bg-white font-sans">
       <Navbar
@@ -11,6 +11,7 @@ const AboutPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding }) =
         onShowLanding={onShowLanding}
         activeRoute="about"
         onNavigate={onNavigate}
+        isLoggedIn={isLoggedIn}
       />
 
       <main>

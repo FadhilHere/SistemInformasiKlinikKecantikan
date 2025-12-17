@@ -12,7 +12,8 @@ const LandingPage = ({
   onShowLogin,
   onShowRegister,
   onShowLanding,
-  onNavigate
+  onNavigate,
+  isLoggedIn
 }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -26,6 +27,7 @@ const LandingPage = ({
         onShowLanding={onShowLanding}
         activeRoute="landing"
         onNavigate={onNavigate}
+        isLoggedIn={isLoggedIn}
       />
       
       <HeroSection />
