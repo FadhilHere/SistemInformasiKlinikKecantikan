@@ -6,6 +6,7 @@ use App\Models\Reservasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class ReservasiController extends Controller
 {
@@ -23,6 +24,11 @@ class ReservasiController extends Controller
                 'message' => 'Forbidden: tidak diizinkan',
             ], 403));
         }
+    }
+
+    public function viewList()
+    {
+        return Inertia::render('ReservationPage');
     }
 
     public function index()

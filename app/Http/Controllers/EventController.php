@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class EventController extends Controller
 {
@@ -20,6 +21,24 @@ class EventController extends Controller
                 'message' => 'Forbidden: hanya admin yang diizinkan',
             ], 403));
         }
+    }
+
+    public function viewList()
+    {
+        return Inertia::render('EventPage', [
+            'events' => Event::all()
+        ]);
+    }
+
+    public function viewDetail($id)
+    {
+        $event = Event::find($id);
+        if (!$event) {
+            abort(404);
+        }
+        return Inertia::render('EventDetailPage', [
+            'event' => $event
+        ]);
     }
 
     public function index()

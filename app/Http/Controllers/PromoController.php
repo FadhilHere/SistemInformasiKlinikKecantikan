@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class PromoController extends Controller
 {
@@ -20,6 +21,24 @@ class PromoController extends Controller
                 'message' => 'Forbidden: hanya admin yang diizinkan',
             ], 403));
         }
+    }
+
+    public function viewList()
+    {
+        return Inertia::render('PromoPage', [
+            'promos' => Promo::all()
+        ]);
+    }
+
+    public function viewDetail($id)
+    {
+        $promo = Promo::find($id);
+        if (!$promo) {
+            abort(404);
+        }
+        return Inertia::render('PromoDetailPage', [
+            'promo' => $promo
+        ]);
     }
 
     public function index()

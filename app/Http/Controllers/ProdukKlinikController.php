@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\QueryException;
+use Inertia\Inertia;
 
 class ProdukKlinikController extends Controller
 {
@@ -24,6 +25,13 @@ class ProdukKlinikController extends Controller
                 'message' => 'Forbidden: hanya admin yang diizinkan',
             ], 403));
         }
+    }
+
+    public function viewList()
+    {
+        return Inertia::render('ProductsPage', [
+            'products' => ProdukKlinik::with('kategori')->get()
+        ]);
     }
 
     /**

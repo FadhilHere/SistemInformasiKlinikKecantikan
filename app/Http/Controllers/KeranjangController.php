@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\QueryException;
+use Inertia\Inertia;
 
 class KeranjangController extends Controller
 {
@@ -17,6 +18,11 @@ class KeranjangController extends Controller
     private function currentUser()
     {
         return Auth::user();
+    }
+
+    public function viewList()
+    {
+        return Inertia::render('CartPage');
     }
 
     /**
