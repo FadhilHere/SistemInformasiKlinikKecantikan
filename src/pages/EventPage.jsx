@@ -1,13 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 
-const EventPage = ({
-  onShowLogin,
-  onShowRegister,
-  onShowLanding,
-  onNavigate,
-  isLoggedIn
-}) => {
+const EventPage = ({ isLoggedIn }) => {
+  const navigate = useNavigate()
+  
   const events = [
     {
       id: 1,
@@ -49,12 +46,12 @@ const EventPage = ({
     {
       title: 'Event Yang Sudah Di Selenggarakan',
       count: '4 Event',
-      status: 'Akan Berlangsung', // Text from image seems to be copy-pasted in design, keeping as is or fixing? I'll fix it slightly or keep generic.
+      status: 'Akan Berlangsung',
       bgImage: 'https://placehold.co/600x200/64748b/ffffff?text=Past'
     },
     {
       title: 'Event Yang Sedang Di Selenggarakan',
-      count: '4 Event', // Placeholder
+      count: '4 Event',
       status: 'Sedang Berlangsung',
       bgImage: 'https://placehold.co/600x200/3b82f6/ffffff?text=Ongoing'
     }
@@ -62,14 +59,7 @@ const EventPage = ({
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="event"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Hero Section */}
@@ -152,7 +142,7 @@ const EventPage = ({
                     </h3>
                     <p className="text-sm text-gray-500">{event.description}</p>
                     <button 
-                      onClick={() => onNavigate('event-detail')}
+                      onClick={() => navigate('/event-detail')}
                       className="mt-4 w-full rounded-full bg-[#4aa731] py-2 text-sm font-bold text-white hover:bg-[#3d8b28]"
                     >
                       Lihat Detail

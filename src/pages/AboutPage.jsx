@@ -2,17 +2,10 @@ import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import Button from '../components/atoms/Button'
 
-const AboutPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, isLoggedIn }) => {
+const AboutPage = ({ isLoggedIn }) => {
   return (
     <div className="min-h-screen bg-white font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="about"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main>
         {/* Hero Section */}

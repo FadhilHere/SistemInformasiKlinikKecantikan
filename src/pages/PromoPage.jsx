@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import PromoCard from '../components/molecules/PromoCard'
 
@@ -80,7 +81,7 @@ const searchIcon = (
   </svg>
 )
 
-const PromoPage = ({ onShowLanding, onShowLogin, onShowRegister, onNavigate }) => {
+const PromoPage = ({ isLoggedIn }) => {
   const [query, setQuery] = useState('')
   const filteredPromos = useMemo(() => {
     return PROMOS.filter((promo) =>
@@ -90,13 +91,7 @@ const PromoPage = ({ onShowLanding, onShowLogin, onShowRegister, onNavigate }) =
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="promo"
-        onNavigate={onNavigate}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
       <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <label className="flex w-full max-w-2xl items-center gap-3 rounded-full bg-white px-5 py-3 text-brand shadow-[0_18px_40px_rgba(0,0,0,0.15)] md:flex-1 md:max-w-xl">
@@ -117,14 +112,13 @@ const PromoPage = ({ onShowLanding, onShowLogin, onShowRegister, onNavigate }) =
 
         <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {filteredPromos.map((promo) => (
-            <button
+            <Link
               key={promo.id}
-              type="button"
+              to="/promo-detail"
               className="text-left"
-              onClick={() => onNavigate?.('promoDetail')}
             >
               <PromoCard {...promo} />
-            </button>
+            </Link>
           ))}
           {filteredPromos.length === 0 && (
             <div className="col-span-full rounded-3xl bg-white p-10 text-center text-brand/70 shadow-card">

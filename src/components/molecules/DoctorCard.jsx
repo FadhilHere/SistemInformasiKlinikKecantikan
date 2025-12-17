@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import Button from '../atoms/Button'
 
 const DoctorCard = ({ name, description, image }) => {
+  const navigate = useNavigate()
+
   return (
     <article className="group relative h-[500px] w-full overflow-hidden rounded-tl-[60px] rounded-br-[60px] shadow-card transition-transform hover:-translate-y-1">
       {/* Background Image */}
@@ -20,7 +23,10 @@ const DoctorCard = ({ name, description, image }) => {
         <p className="text-sm font-medium leading-relaxed text-white/90">
           {description}
         </p>
-        <Button className="mt-4 w-fit rounded-full bg-[#53c41a] px-8 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#43a015] border border-white/20">
+        <Button 
+            className="mt-4 w-fit rounded-full bg-[#53c41a] px-8 py-3 text-sm font-bold text-white shadow-lg hover:bg-[#43a015] border border-white/20"
+            onClick={() => navigate('/doctor-detail')}
+        >
           Lihat Profil
         </Button>
       </div>

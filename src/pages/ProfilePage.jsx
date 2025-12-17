@@ -4,7 +4,7 @@ import Footer from '../fragments/Footer'
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 
-const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, isLoggedIn, onLogout }) => {
+const ProfilePage = ({ isLoggedIn, onLogout }) => {
   const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
   
   // Form States
@@ -82,14 +82,7 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="profile"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
         {/* Banner */}
@@ -297,6 +290,12 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
                         </div>
                         <button className="rounded-full bg-white px-8 py-2 font-bold text-black shadow-md ring-1 ring-gray-200 hover:bg-gray-50">
                             Pilih Gambar
+                        </button>
+                        <button 
+                            onClick={onLogout}
+                            className="mt-6 rounded-full bg-red-500 px-10 py-2 font-bold text-white shadow-md transition hover:bg-red-600"
+                        >
+                            Keluar
                         </button>
                     </div>
                 </div>

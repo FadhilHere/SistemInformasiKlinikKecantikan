@@ -8,27 +8,14 @@ import AdvantagesSection from '../fragments/AdvantagesSection'
 import ReservationBanner from '../fragments/ReservationBanner'
 import Footer from '../fragments/Footer'
 
-const LandingPage = ({
-  onShowLogin,
-  onShowRegister,
-  onShowLanding,
-  onNavigate,
-  isLoggedIn
-}) => {
+const LandingPage = ({ isLoggedIn }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
     <div className="min-h-screen bg-background relative">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="landing"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
       
       <HeroSection />
 

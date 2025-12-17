@@ -89,7 +89,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
   )
 }
 
-const ReservationPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, isLoggedIn }) => {
+const ReservationPage = ({ isLoggedIn }) => {
   const [bookingStep, setBookingStep] = useState('schedule') // 'schedule' | 'detail'
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -151,14 +151,7 @@ const ReservationPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLandin
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="reservation"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-6xl px-4 py-12">
         {bookingStep === 'schedule' ? (
