@@ -7,6 +7,12 @@ use App\Http\Controllers\ProfilDokterController;
 use App\Http\Controllers\JadwalReservasiController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\KategoriProdukController;
+use App\Http\Controllers\ProdukKlinikController;
+use App\Http\Controllers\KeranjangController;
+use App\Http\Controllers\PenjualanController;
+use App\Http\Controllers\DetailPenjualanController;
+use App\Http\Controllers\TestimoniController;
 use App\Http\Controllers\ProfilPerusahaanController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\KegiatanController;
@@ -19,16 +25,14 @@ Route::get('/test', function () {
     ]);
 });
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // --- EXISTING ROUTES ---
 
     // CRUD profil dokter - hanya admin (dicek di controller)
     Route::get('/profil-dokter', [ProfilDokterController::class, 'index']);
@@ -65,6 +69,8 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'update']);
     Route::delete('/profil-perusahaan/{id}', [ProfilPerusahaanController::class, 'destroy']);
 
+    // --- OTHER TEAM MEMBERS ROUTES ---
+
     // CRUD event - hanya admin (dicek di controller)
     Route::get('/event', [EventController::class, 'index']);
     Route::get('/event/{id}', [EventController::class, 'show']);
@@ -85,4 +91,29 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/promo', [PromoController::class, 'store']);
     Route::put('/promo/{id}', [PromoController::class, 'update']);
     Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
+
+    // Bagian Hardy
+    // CRUD kategori produk - hanya admin (dicek di controller)
+    Route::post('/kategori-produk', [KategoriProdukController::class, 'store']);
+    Route::put('/kategori-produk/{id}', [KategoriProdukController::class, 'update']);
+    Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
 });
+
+// Public routes untuk kategori produk (read-only)
+Route::get('/kategori-produk', [KategoriProdukController::class, 'index']);
+Route::get('/kategori-produk/{id}', [KategoriProdukController::class, 'show']);
+
+// Protected routes untuk kategori produk (admin only)
+Route::middleware('auth:api')->group(function () {
+    Route::post('/kategori-produk', [KategoriProdukController::class, 'store']);
+    Route::put('/kategori-produk/{id}', [KategoriProdukController::class, 'update']);
+    Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
+});
+
+// Public routes untuk produk klinik (read-only)
+Route::get('/produk-klinik', [ProdukKlinikController::class, 'index']);
+Route::get('/produk-klinik/{id}', [ProdukKlinikController::class, 'show']);
+
+// Public routes untuk testimoni (read-only)
+Route::get('/testimoni', [TestimoniController::class, 'index']);
+Route::get('/testimoni/{id}', [TestimoniController::class, 'show']);
