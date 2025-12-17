@@ -8,7 +8,7 @@ const INITIAL_FORM = {
   password: ''
 }
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [formValues, setFormValues] = useState(INITIAL_FORM)
   const [statusMessage, setStatusMessage] = useState('')
 
@@ -25,6 +25,9 @@ const LoginForm = () => {
     }
 
     setStatusMessage('Login berhasil disubmit (mock).')
+    if (onLoginSuccess) {
+      onLoginSuccess()
+    }
   }
 
   return (
