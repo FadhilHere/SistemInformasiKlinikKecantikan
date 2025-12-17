@@ -28,13 +28,9 @@ const ProductShowcase = () => {
   return (
     <section className="flex flex-col gap-8">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.4em] text-primary">
-          produk best seller
-        </p>
-        <h2 className="mt-2 text-3xl font-semibold text-brand">
-          Rawat kulit cantikmu dari rumah.
+        <h2 className="mx-auto max-w-3xl text-2xl font-bold leading-relaxed text-[#4aa731] md:text-3xl">
+          Rawat Kulit Cantikmu Dari Rumah. Temukan Produk Best Seller Pilihan Kami.
         </h2>
-        <p className="text-brand/70">Temukan produk best seller pilihan kami.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
