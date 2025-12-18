@@ -2,19 +2,16 @@ import { useState } from 'react'
 import InputField from '../components/atoms/InputField'
 import Button from '../components/atoms/Button'
 import LogoIcon from '../components/atoms/LogoIcon'
-import { 
-  isValidEmail, 
-  isValidPassword, 
-  isValidPhone, 
-  isNotEmpty, 
-  sanitizeInput 
-} from '../utils/validators'
+import { apiFetch } from '../lib/api'
 
 const FIELD_CONFIG = [
-  { name: 'name', label: 'Nama', placeholder: 'Nama Lengkap' },
+  { name: 'nama', label: 'Nama', placeholder: 'Nama Lengkap' },
   { name: 'email', label: 'Email', placeholder: 'Email', type: 'email' },
-  { name: 'whatsapp', label: 'Nomor WhatsApp', placeholder: '08xxxxxxxxxx' },
-  { name: 'address', label: 'Alamat', placeholder: 'Alamat domisili' },
+  { name: 'nomorWa', label: 'Nomor WhatsApp', placeholder: '08xxxxxxxxxx' },
+  { name: 'alamat', label: 'Alamat', placeholder: 'Alamat domisili' },
+  { name: 'jenisKelamin', label: 'Jenis Kelamin', placeholder: 'Pria/Wanita' },
+  { name: 'tanggalLahir', label: 'Tanggal Lahir', type: 'date' },
+  // { name: 'role', label: 'Role', placeholder: 'user' },
   {
     name: 'password',
     label: 'Password',
@@ -22,75 +19,68 @@ const FIELD_CONFIG = [
     type: 'password',
     allowToggle: true
   },
-  {
-    name: 'confirmPassword',
-    label: 'Konfirmasi Password',
-    placeholder: 'Ulangi password',
-    type: 'password',
-    allowToggle: true
-  }
+  // {
+  //   name: 'confirmPassword',
+  //   label: 'Konfirmasi Password',
+  //   placeholder: 'Ulangi password',
+  //   type: 'password',
+  //   allowToggle: true
+  // }
 ]
 
-const INITIAL_FORM = FIELD_CONFIG.reduce(
-  (acc, field) => ({ ...acc, [field.name]: '' }),
-  {}
-)
+const INITIAL_FORM = {
+  ...FIELD_CONFIG.reduce(
+    (acc, field) => ({ ...acc, [field.name]: '' }),
+    {}
+  ),
+  role: 'pelanggan'
+}
 
 const RegistrationForm = () => {
   const [formValues, setFormValues] = useState(INITIAL_FORM)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setFormValues((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    
-    // Clear previous status
-    setStatusMessage('')
+    // if (formValues.password !== formValues.confirmPassword) {
+    //   setStatusMessage('Password dan konfirmasi password harus sama.')
+    //   return
+    // }
 
-    // Basic Empty Checks
-    for (const field of FIELD_CONFIG) {
-        if (!isNotEmpty(formValues[field.name])) {
-            setStatusMessage(`${field.label} wajib diisi.`)
-            return
-        }
+    try {
+      setIsSubmitting(true)
+      setStatusMessage('')
+
+      await apiFetch('/api/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          nama: formValues.nama,
+          alamat: formValues.alamat,
+          jenisKelamin: formValues.jenisKelamin,
+          tanggalLahir: formValues.tanggalLahir,
+          role: formValues.role,
+          email: formValues.email,
+          nomorWa: formValues.nomorWa,
+          password: formValues.password,
+          // password_confirmation: formValues.confirmPassword
+        })
+      })
+
+      setStatusMessage('Registrasi berhasil. Silakan login.')
+      setFormValues(INITIAL_FORM)
+    } catch (error) {
+      const message =
+        error?.data?.message || 'Registrasi gagal. Periksa data Anda.'
+      setStatusMessage(message)
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Specific Format Checks
-    if (!isValidEmail(formValues.email)) {
-        setStatusMessage('Format email tidak valid.')
-        return
-    }
-
-    if (!isValidPhone(formValues.whatsapp)) {
-        setStatusMessage('Nomor WhatsApp tidak valid (min 10 digit).')
-        return
-    }
-
-    // Password Strength
-    if (!isValidPassword(formValues.password)) {
-        setStatusMessage('Password harus memiliki minimal 8 karakter, 1 huruf besar, 1 huruf kecil, dan 1 angka.')
-        return
-    }
-
-    if (formValues.password !== formValues.confirmPassword) {
-      setStatusMessage('Password dan konfirmasi password harus sama.')
-      return
-    }
-
-    // Sanitize data before sending (mocking sending)
-    const cleanData = {
-        ...formValues,
-        name: sanitizeInput(formValues.name),
-        address: sanitizeInput(formValues.address)
-    }
-
-    console.log("Clean Data Submitted:", cleanData)
-    
-    setStatusMessage('Registrasi berhasil! (Data aman dan tervalidasi)')
   }
 
   return (
@@ -134,8 +124,8 @@ const RegistrationForm = () => {
         )}
 
         <div className="col-span-full">
-          <Button type="submit" className="w-full md:w-fit">
-            Registrasi
+          <Button type="submit" className="w-full md:w-fit" disabled={isSubmitting}>
+            {isSubmitting ? 'Memproses...' : 'Registrasi'}
           </Button>
         </div>
       </form>

@@ -6,6 +6,7 @@ import RegistrationPage from './pages/RegistrationPage'
 import PromoPage from './pages/PromoPage'
 import PromoDetailPage from './pages/PromoDetailPage'
 import ProductsPage from './pages/ProductsPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 import EventPage from './pages/EventPage'
 import EventDetailPage from './pages/EventDetailPage'
 import CartPage from './pages/CartPage'
@@ -40,17 +41,18 @@ const App = () => {
         isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /> : <Navigate to="/login" />
       } />
       <Route path="/promo" element={<PromoPage isLoggedIn={isLoggedIn} />} />
-      <Route path="/promo-detail" element={<PromoDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/promo/:id" element={<PromoDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/products" element={<ProductsPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/products/:id" element={<ProductDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/event" element={<EventPage isLoggedIn={isLoggedIn} />} />
       <Route path="/event-detail" element={<EventDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/cart" element={<CartPage isLoggedIn={isLoggedIn} />} />
       <Route path="/about" element={<AboutPage isLoggedIn={isLoggedIn} />} />
       <Route path="/doctors" element={<DoctorsPage isLoggedIn={isLoggedIn} />} />
       <Route path="/testimonials" element={<TestimonialPage isLoggedIn={isLoggedIn} />} />
-      <Route path="/testimonial-detail" element={<TestimonialDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/testimonials/:id" element={<TestimonialDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/reservation" element={<ReservationPage isLoggedIn={isLoggedIn} />} />
-      <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/doctor-detail/:id" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

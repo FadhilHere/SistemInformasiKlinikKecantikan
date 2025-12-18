@@ -1,6 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
+import { apiFetch, API_BASE_URL } from '../lib/api'
 
 const calendarIcon = (
   <svg className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none">
@@ -50,19 +52,64 @@ const bagIcon = (
 
 const PromoDetailPage = ({ isLoggedIn }) => {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const [promo, setPromo] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const promo = {
-    title: 'Ada Promo Apa Ini?',
-    startDate: '23 Nov 2025',
-    endDate: '25 Nov 2025',
-    status: 'Masih Berlaku',
-    category: 'Acne',
-    description:
-      'Seminar kecantikan yang diselenggarakan oleh Klinik Kecantikan Mische akan berlangsung di Politeknik Caltex Riau pada 23–25 November 2025 dan ditujukan bagi mahasiswa, tenaga pendidik, serta masyarakat umum yang tertarik untuk memperdalam wawasan seputar dunia kecantikan. Acara ini akan menghadirkan sesi edukatif mengenai perawatan kulit yang tepat, pengenalan teknologi terbaru dalam estetika, tips praktis menjaga kesehatan dan penampilan sehari-hari, serta diskusi langsung dengan para ahli kecantikan dari Mische. Melalui kegiatan ini, peserta diharapkan memperoleh pengetahuan dan keterampilan yang dapat diterapkan dalam kehidupan sehari-hari maupun dunia profesional yang berkaitan dengan industri kecantikan.',
-    image:
-      'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=80',
-    voucher: 'MCHE-2025-88'
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        setIsLoading(true)
+        const response = await apiFetch(`/api/promo/${id}`)
+        if (response.success) {
+          setPromo(response.data)
+        } else {
+          throw new Error('Promo tidak ditemukan')
+        }
+      } catch (err) {
+        console.error(err)
+        setError('Gagal memuat detail promo.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (id) fetchDetail()
+  }, [id])
+
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    })
   }
+
+  const getImageUrl = (path) => {
+    if (!path) return 'https://via.placeholder.com/1600x600?text=No+Image'
+    if (path.startsWith('http')) return path
+    return `${API_BASE_URL}/storage/${path}`
+  }
+
+  if (isLoading) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Navbar isLoggedIn={isLoggedIn} />
+          <div className="flex justify-center py-20">Memuat...</div>
+        </div>
+      )
+  }
+
+  if (error || !promo) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn={isLoggedIn} />
+        <div className="flex justify-center py-20 text-red-500">{error || 'Promo tidak ditemukan'}</div>
+      </div>
+    )
+  }
+
+  const isActive = promo.status && new Date(promo.tanggalSelesai) >= new Date();
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,23 +117,23 @@ const PromoDetailPage = ({ isLoggedIn }) => {
       <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12">
         <section className="overflow-hidden rounded-tl-[36px] rounded-br-[36px] rounded-tr-none rounded-bl-none bg-white shadow-card">
           <img
-            src={promo.image}
-            alt={promo.title}
+            src={getImageUrl(promo.gambar)}
+            alt={promo.namaPromo}
             className="h-[360px] w-full object-cover"
           />
           <div className="space-y-6 px-8 py-8 text-brand">
-            <h1 className="text-3xl font-semibold">{promo.title}</h1>
+            <h1 className="text-3xl font-semibold">{promo.namaPromo}</h1>
             <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#f3fff2] px-4 py-3 text-sm font-semibold text-primary">
               <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-brand">
                 {calendarIcon}
-                {promo.startDate}
+                {formatDate(promo.tanggalMulai)}
               </span>
               <span className="px-4 text-brand">-</span>
               <span className="rounded-full bg-white px-4 py-2 text-brand">
-                {promo.endDate}
+                {formatDate(promo.tanggalSelesai)}
               </span>
             </div>
-            <p className="leading-relaxed text-brand/80">{promo.description}</p>
+            <p className="leading-relaxed text-brand/80">{promo.deskripsi}</p>
           </div>
         </section>
 
@@ -96,11 +143,11 @@ const PromoDetailPage = ({ isLoggedIn }) => {
               {voucherIcon}
               <div>
                 <h3 className="text-lg font-semibold text-brand">Code Voucher</h3>
-                <p className="text-sm text-brand/70">Status : {promo.status}</p>
+                <p className="text-sm text-brand/70">Status : {isActive ? 'Masih Berlaku' : 'Tidak Berlaku'}</p>
               </div>
             </div>
             <div className="mt-4 flex items-center gap-3 rounded-full bg-[#f3fff2] px-4 py-3 font-semibold tracking-widest text-brand">
-              <span>{promo.voucher.replace(/[A-Z0-9]/g, '*')}</span>
+              <span>{promo.kode.replace(/[A-Z0-9]/g, '*')}</span>
               <Button variant="light" className="px-3 py-1 text-sm text-primary">
                 Lihat
               </Button>
@@ -113,8 +160,8 @@ const PromoDetailPage = ({ isLoggedIn }) => {
               <div>
                 <h3 className="text-lg font-semibold text-brand">Kategori Produk</h3>
                 <p className="text-sm text-brand/70">
-                  Produk :{' '}
-                  <span className="font-semibold text-brand">{promo.category}</span>
+                  Jenis :{' '}
+                  <span className="font-semibold text-brand">{promo.jenisPromo}</span>
                 </p>
               </div>
             </div>
