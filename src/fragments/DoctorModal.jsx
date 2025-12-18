@@ -3,24 +3,33 @@ import Button from '../components/atoms/Button';
 
 const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        photo: '',
+        nama: '',
+        foto: '',
+        fotoFile: null,
         email: '',
-        description: '',
-        status: ''
+        deskripsi: '',
+        // status: '' // status sementara tidak dipakai
     });
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    nama: initialData.nama || initialData.name || '',
+                    foto: initialData.foto || initialData.photo || '',
+                    fotoFile: null,
+                    email: initialData.email || '',
+                    deskripsi: initialData.deskripsi || initialData.description || '',
+                    // status: initialData.status || ''
+                });
             } else {
                 setFormData({
-                    name: '',
-                    photo: '',
+                    nama: '',
+                    foto: '',
+                    fotoFile: null,
                     email: '',
-                    description: '',
-                    status: ''
+                    deskripsi: '',
+                    // status: ''
                 });
             }
         }
@@ -61,8 +70,8 @@ const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =
                             <label className="text-sm font-medium text-gray-700">Nama Dokter</label>
                             <input
                                 type="text"
-                                name="name"
-                                value={formData.name}
+                                name="nama"
+                                value={formData.nama}
                                 onChange={handleChange}
                                 placeholder="Nama Dokter"
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
@@ -81,7 +90,7 @@ const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =
                                         if (file) {
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
-                                                setFormData(prev => ({ ...prev, photo: reader.result }));
+                                                setFormData(prev => ({ ...prev, foto: reader.result, fotoFile: file }));
                                             };
                                             reader.readAsDataURL(file);
                                         }
@@ -94,11 +103,11 @@ const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =
                                     Choose File
                                 </label>
                                 <span className="text-sm text-gray-500">
-                                    {formData.photo ? 'File Selected' : 'No File Chosen'}
+                                    {formData.foto ? 'File Selected' : 'No File Chosen'}
                                 </span>
                             </div>
-                            {formData.photo && (
-                                <img src={formData.photo} alt="Doctor Photo Preview" className="mt-2 w-24 h-24 object-cover rounded-lg border border-gray-200" />
+                            {formData.foto && (
+                                <img src={formData.foto} alt="Doctor Photo Preview" className="mt-2 w-24 h-24 object-cover rounded-lg border border-gray-200" />
                             )}
                         </div>
                     </div>
@@ -118,25 +127,13 @@ const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =
                             <label className="text-sm font-medium text-gray-700">Deskripsi</label>
                             <input
                                 type="text"
-                                name="description"
-                                value={formData.description}
+                                name="deskripsi"
+                                value={formData.deskripsi}
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Status</label>
-                            <select
-                                name="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
-                            >
-                                <option value="">Pilih Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
+                        {/* Status field sementara tidak digunakan */}
                     </div>
 
                     <div className="flex justify-end pt-4">
