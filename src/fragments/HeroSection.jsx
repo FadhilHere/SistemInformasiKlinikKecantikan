@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Button from '../components/atoms/Button'
 
 const SLIDES = [
@@ -26,6 +27,7 @@ const SLIDES = [
 ]
 
 const HeroSection = () => {
+  const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(1)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const intervalRef = useRef(null)
@@ -114,7 +116,11 @@ const HeroSection = () => {
                 <p className="w-fit rounded-full bg-white/20 px-5 py-3 text-sm font-medium tracking-wide backdrop-blur-sm">
                   {slide.subtitle}
                 </p>
-                <Button variant="light" className="mt-4 w-fit px-10 py-3 text-primary font-bold">
+                <Button 
+                    variant="light" 
+                    className="mt-4 w-fit px-10 py-3 text-primary font-bold"
+                    onClick={() => navigate('/reservation')}
+                >
                   Reservasi Sekarang
                 </Button>
               </div>

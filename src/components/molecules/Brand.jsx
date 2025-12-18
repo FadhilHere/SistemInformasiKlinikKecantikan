@@ -1,10 +1,10 @@
+import { Link } from 'react-router-dom'
 import LogoIcon from '../atoms/LogoIcon'
 
-const Brand = ({ onClick }) => {
+const Brand = () => {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to="/"
       className="flex items-center gap-3 rounded-2xl border border-transparent bg-transparent px-2 py-1 text-left transition hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60"
     >
       <LogoIcon size={52} />
@@ -14,7 +14,7 @@ const Brand = ({ onClick }) => {
           AESTHETIC CLINIC
         </span>
       </div>
-    </button>
+    </Link>
   )
 }
 

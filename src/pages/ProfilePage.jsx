@@ -3,8 +3,15 @@ import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
+import { 
+    isValidEmail, 
+    isValidPassword, 
+    isValidPhone, 
+    isNotEmpty, 
+    sanitizeInput 
+} from '../utils/validators'
 
-const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, isLoggedIn, onLogout }) => {
+const ProfilePage = ({ isLoggedIn, onLogout }) => {
   const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
   
   // Form States
@@ -16,6 +23,53 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
   const [email, setEmail] = useState("bintang@gmail.com")
   const [password, setPassword] = useState("12345")
   const [confirmPassword, setConfirmPassword] = useState("12345")
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' })
+
+  const handleSave = () => {
+    // Basic Empty Checks
+    if (!isNotEmpty(name) || !isNotEmpty(address) || !birthDate || !isNotEmpty(whatsapp) || !isNotEmpty(email)) {
+        setStatusMessage({ type: 'error', text: 'Semua data diri wajib diisi.' })
+        return
+    }
+
+    // Specific Format Checks
+    if (!isValidEmail(email)) {
+        setStatusMessage({ type: 'error', text: 'Format email tidak valid.' })
+        return
+    }
+
+    if (!isValidPhone(whatsapp)) {
+        setStatusMessage({ type: 'error', text: 'Nomor WhatsApp tidak valid.' })
+        return
+    }
+
+    // If password is changed (length > 0), validate it. 
+    // Assuming if it's the default "12345" we might skip strict check OR enforce update? 
+    // Let's enforce strictness if they try to save.
+    
+    // Check if password fields are empty? No, they have defaults.
+    // If strict validation is required:
+    // "12345" is weak. 
+    // Ideally we shouldn't prepopulate password in plain text, but this is a mock.
+    
+    if (password !== confirmPassword) {
+        setStatusMessage({ type: 'error', text: 'Password dan konfirmasi tidak sama.' })
+        return
+    }
+
+    // Sanitize
+    const cleanData = {
+        name: sanitizeInput(name),
+        address: sanitizeInput(address),
+        gender: sanitizeInput(gender), // Select, but good to be safe
+        whatsapp: sanitizeInput(whatsapp),
+        email: sanitizeInput(email),
+        // Password usually hashed server side, we don't sanitize characters as they are effectively secrets
+    }
+
+    console.log("Saving clean data:", cleanData)
+    setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
+  }
 
   const reservationHistory = [
     {
@@ -82,14 +136,7 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="profile"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
         {/* Banner */}
@@ -279,7 +326,15 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
 
                         {/* Submit Button */}
                         <div className="mt-8">
-                            <button className="w-full rounded-full bg-[#4aa731] py-3 text-lg font-bold text-white shadow-lg transition hover:bg-[#3d8c29]">
+                            {statusMessage.text && (
+                                <div className={`mb-4 rounded-lg p-3 text-sm font-semibold ${statusMessage.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                    {statusMessage.text}
+                                </div>
+                            )}
+                            <button 
+                                onClick={handleSave}
+                                className="w-full rounded-full bg-[#4aa731] py-3 text-lg font-bold text-white shadow-lg transition hover:bg-[#3d8c29]"
+                            >
                                 Simpan
                             </button>
                         </div>
@@ -297,6 +352,12 @@ const ProfilePage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding, i
                         </div>
                         <button className="rounded-full bg-white px-8 py-2 font-bold text-black shadow-md ring-1 ring-gray-200 hover:bg-gray-50">
                             Pilih Gambar
+                        </button>
+                        <button 
+                            onClick={onLogout}
+                            className="mt-6 rounded-full bg-red-500 px-10 py-2 font-bold text-white shadow-md transition hover:bg-red-600"
+                        >
+                            Keluar
                         </button>
                     </div>
                 </div>

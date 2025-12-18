@@ -33,13 +33,7 @@ const PRODUCTS = [
 const heroImage =
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80'
 
-const ProductsPage = ({
-  onShowLanding,
-  onShowLogin,
-  onShowRegister,
-  onNavigate,
-  isLoggedIn
-}) => {
+const ProductsPage = ({ isLoggedIn }) => {
   const [category, setCategory] = useState('Semua Produk')
   const filteredProducts = useMemo(() => {
     if (category === 'Semua Produk') return PRODUCTS
@@ -51,14 +45,7 @@ const ProductsPage = ({
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="products"
-        onNavigate={onNavigate}
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
       <main className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12">
         <section className="grid gap-8 rounded-tl-[36px] rounded-br-[36px] rounded-tr-none rounded-bl-none bg-gradient-to-r from-[#1b8f35] to-[#4ad14e] px-8 py-12 text-white shadow-card lg:grid-cols-2 lg:items-center">
           <div className="space-y-4">

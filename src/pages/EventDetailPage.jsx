@@ -1,16 +1,10 @@
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 
-const EventDetailPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding }) => {
+const EventDetailPage = ({ isLoggedIn }) => {
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="event"
-        onNavigate={onNavigate}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-6xl px-4 py-12">
         <div className="rounded-br-[60px] rounded-tl-[60px] bg-white p-8 shadow-xl">

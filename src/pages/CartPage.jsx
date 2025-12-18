@@ -3,7 +3,7 @@ import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import Button from '../components/atoms/Button'
 
-const CartPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding }) => {
+const CartPage = ({ isLoggedIn }) => {
   const [items, setItems] = useState([
     {
       id: 1,
@@ -65,13 +65,7 @@ const CartPage = ({ onNavigate, onShowLogin, onShowRegister, onShowLanding }) =>
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="cart"
-        onNavigate={onNavigate}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="mx-auto max-w-6xl px-4 py-12">
         {/* Header */}

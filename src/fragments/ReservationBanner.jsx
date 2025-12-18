@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import Button from '../components/atoms/Button'
 
 const ReservationBanner = () => {
+  const navigate = useNavigate()
+
   return (
     <section className="rounded-[32px] bg-gradient-to-r from-[#1f701d] to-[#3fb149] px-10 py-10 text-center text-white shadow-card md:text-left">
       <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
@@ -12,7 +15,11 @@ const ReservationBanner = () => {
             Konsultasi dengan dokter ahli tanpa harus menunggu lama.
           </p>
         </div>
-        <Button variant="light" className="px-10">
+        <Button 
+            variant="light" 
+            className="px-10"
+            onClick={() => navigate('/reservation')}
+        >
           Reservasi Sekarang
         </Button>
       </div>

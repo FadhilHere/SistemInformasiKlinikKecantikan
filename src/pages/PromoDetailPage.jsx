@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
 
@@ -47,12 +48,9 @@ const bagIcon = (
   </svg>
 )
 
-const PromoDetailPage = ({
-  onShowLanding,
-  onShowLogin,
-  onShowRegister,
-  onNavigate
-}) => {
+const PromoDetailPage = ({ isLoggedIn }) => {
+  const navigate = useNavigate()
+
   const promo = {
     title: 'Ada Promo Apa Ini?',
     startDate: '23 Nov 2025',
@@ -68,13 +66,7 @@ const PromoDetailPage = ({
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar
-        onShowLogin={onShowLogin}
-        onShowRegister={onShowRegister}
-        onShowLanding={onShowLanding}
-        activeRoute="promo"
-        onNavigate={onNavigate}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
       <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12">
         <section className="overflow-hidden rounded-tl-[36px] rounded-br-[36px] rounded-tr-none rounded-bl-none bg-white shadow-card">
           <img
@@ -126,7 +118,11 @@ const PromoDetailPage = ({
                 </p>
               </div>
             </div>
-            <Button variant="primary" className="mt-6 w-full">
+            <Button 
+                variant="primary" 
+                className="mt-6 w-full"
+                onClick={() => navigate('/products')}
+            >
               Lihat Semua Produk
             </Button>
           </div>

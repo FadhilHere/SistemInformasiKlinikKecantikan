@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegistrationPage from './pages/RegistrationPage'
@@ -11,75 +12,49 @@ import CartPage from './pages/CartPage'
 import AboutPage from './pages/AboutPage'
 import ReservationPage from './pages/ReservationPage'
 import ProfilePage from './pages/ProfilePage'
+import DoctorDetailPage from './pages/DoctorDetailPage'
+import DoctorsPage from './pages/DoctorsPage'
+import TestimonialPage from './pages/TestimonialPage'
+import TestimonialDetailPage from './pages/TestimonialDetailPage'
 
 const App = () => {
-  const [activePage, setActivePage] = useState('landing')
+  // No more activePage state
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-  const handleNavigate = (route) => {
-    setActivePage(route)
-  }
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
-    setActivePage('landing') // or 'profile'
   }
 
-  const sharedProps = {
-    onShowLanding: () => setActivePage('landing'),
-    onShowLogin: () => setActivePage('login'),
-    onShowRegister: () => setActivePage('registration'),
-    onNavigate: handleNavigate,
-    isLoggedIn: isLoggedIn,
-    onLogout: () => setIsLoggedIn(false),
-    onLoginSuccess: handleLoginSuccess
+  const handleLogout = () => {
+    setIsLoggedIn(false)
   }
 
-  if (activePage === 'login') {
-    return <LoginPage {...sharedProps} />
-  }
-
-  if (activePage === 'registration') {
-    return <RegistrationPage {...sharedProps} />
-  }
-
-  if (activePage === 'profile') {
-    return <ProfilePage {...sharedProps} />
-  }
-
-  if (activePage === 'promo') {
-    return <PromoPage {...sharedProps} />
-  }
-
-  if (activePage === 'promoDetail') {
-    return <PromoDetailPage {...sharedProps} />
-  }
-
-  if (activePage === 'products') {
-    return <ProductsPage {...sharedProps} />
-  }
-
-  if (activePage === 'event') {
-    return <EventPage {...sharedProps} />
-  }
-
-  if (activePage === 'event-detail') {
-    return <EventDetailPage {...sharedProps} />
-  }
-
-  if (activePage === 'cart') {
-    return <CartPage {...sharedProps} />
-  }
-
-  if (activePage === 'about') {
-    return <AboutPage {...sharedProps} />
-  }
-
-  if (activePage === 'reservation') {
-    return <ReservationPage {...sharedProps} />
-  }
-
-  return <LandingPage {...sharedProps} />
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/login" element={
+        isLoggedIn ? <Navigate to="/" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
+      } />
+      <Route path="/register" element={<RegistrationPage />} />
+      <Route path="/profile" element={
+        isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /> : <Navigate to="/login" />
+      } />
+      <Route path="/promo" element={<PromoPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/promo-detail" element={<PromoDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/products" element={<ProductsPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/event" element={<EventPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/event-detail" element={<EventDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/cart" element={<CartPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/about" element={<AboutPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/doctors" element={<DoctorsPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/testimonials" element={<TestimonialPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/testimonial-detail" element={<TestimonialDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/reservation" element={<ReservationPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  )
 }
 
 export default App
