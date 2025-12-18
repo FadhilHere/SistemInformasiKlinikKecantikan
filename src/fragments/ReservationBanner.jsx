@@ -15,10 +15,10 @@ const ReservationBanner = () => {
             Konsultasi dengan dokter ahli tanpa harus menunggu lama.
           </p>
         </div>
-        <Button 
-            variant="light" 
-            className="px-10"
-            onClick={() => navigate('/reservation')}
+        <Button
+          variant="light"
+          className="px-10"
+          onClick={() => navigate('/reservation')}
         >
           Reservasi Sekarang
         </Button>

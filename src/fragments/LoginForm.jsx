@@ -21,7 +21,6 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    
     // Reset status
     setStatusMessage('')
 
@@ -32,21 +31,21 @@ const LoginForm = ({ onLoginSuccess }) => {
     }
 
     if (!isValidEmail(formValues.email)) {
-        setStatusMessage('Format email tidak valid.')
-        return
+      setStatusMessage('Format email tidak valid.')
+      return
     }
 
     try {
-        const isValid = await verifyLogin(formValues.email, formValues.password);
-        if (isValid) {
-            setStatusMessage('Login Berhasil!')
-            if (onLoginSuccess) onLoginSuccess()
-        } else {
-            setStatusMessage('Email atau password salah.')
-        }
+      const isValid = await verifyLogin(formValues.email, formValues.password);
+      if (isValid) {
+        setStatusMessage('Login Berhasil!')
+        if (onLoginSuccess) onLoginSuccess()
+      } else {
+        setStatusMessage('Email atau password salah.')
+      }
     } catch (error) {
-        setStatusMessage('Terjadi kesalahan saat login.')
-        console.error(error)
+      setStatusMessage('Terjadi kesalahan saat login.')
+      console.error(error)
     }
   }
 

@@ -21,7 +21,6 @@ const Footer = () => {
               Jl. KH.Ahmad Dahlan No.80, Sukajadi, Pekanbaru
             </p>
             <p className="text-sm text-white/90">+628116922551</p>
-            
             <h3 className="text-xl font-bold mt-6 mb-4">Waktu Operasional</h3>
             <p className="text-sm font-semibold text-white/90">Setiap Hari</p>
             <p className="text-sm text-white/90">10 A.M - 7 P.M</p>
@@ -41,8 +40,8 @@ const Footer = () => {
       <div className="bg-[#1a1a1a] py-6 text-xs text-white/70">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 md:flex-row lg:px-8">
           <div className="flex items-center gap-2">
-             <span className="text-lg">©</span>
-             <span>2023 Beautya. All Rights Reserved.</span>
+            <span className="text-lg">©</span>
+            <span>2023 Beautya. All Rights Reserved.</span>
           </div>
           <div className="flex gap-6">
             <a href="#" className="hover:text-white">Terms & Conditions</a>

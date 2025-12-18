@@ -2,12 +2,12 @@ import { useState } from 'react'
 import InputField from '../components/atoms/InputField'
 import Button from '../components/atoms/Button'
 import LogoIcon from '../components/atoms/LogoIcon'
-import { 
-  isValidEmail, 
-  isValidPassword, 
-  isValidPhone, 
-  isNotEmpty, 
-  sanitizeInput 
+import {
+  isValidEmail,
+  isValidPassword,
+  isValidPhone,
+  isNotEmpty,
+  sanitizeInput
 } from '../utils/validators'
 
 const FIELD_CONFIG = [
@@ -47,33 +47,32 @@ const RegistrationForm = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    
     // Clear previous status
     setStatusMessage('')
 
     // Basic Empty Checks
     for (const field of FIELD_CONFIG) {
-        if (!isNotEmpty(formValues[field.name])) {
-            setStatusMessage(`${field.label} wajib diisi.`)
-            return
-        }
+      if (!isNotEmpty(formValues[field.name])) {
+        setStatusMessage(`${field.label} wajib diisi.`)
+        return
+      }
     }
 
     // Specific Format Checks
     if (!isValidEmail(formValues.email)) {
-        setStatusMessage('Format email tidak valid.')
-        return
+      setStatusMessage('Format email tidak valid.')
+      return
     }
 
     if (!isValidPhone(formValues.whatsapp)) {
-        setStatusMessage('Nomor WhatsApp tidak valid (min 10 digit).')
-        return
+      setStatusMessage('Nomor WhatsApp tidak valid (min 10 digit).')
+      return
     }
 
     // Password Strength
     if (!isValidPassword(formValues.password)) {
-        setStatusMessage('Password harus memiliki minimal 8 karakter, 1 huruf besar, 1 huruf kecil, dan 1 angka.')
-        return
+      setStatusMessage('Password harus memiliki minimal 8 karakter, 1 huruf besar, 1 huruf kecil, dan 1 angka.')
+      return
     }
 
     if (formValues.password !== formValues.confirmPassword) {
@@ -83,13 +82,13 @@ const RegistrationForm = () => {
 
     // Sanitize data before sending (mocking sending)
     const cleanData = {
-        ...formValues,
-        name: sanitizeInput(formValues.name),
-        address: sanitizeInput(formValues.address)
+      ...formValues,
+      name: sanitizeInput(formValues.name),
+      address: sanitizeInput(formValues.address)
     }
 
     console.log("Clean Data Submitted:", cleanData)
-    
+
     setStatusMessage('Registrasi berhasil! (Data aman dan tervalidasi)')
   }
 

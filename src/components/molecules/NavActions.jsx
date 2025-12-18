@@ -14,22 +14,22 @@ const NavActions = ({ isLoggedIn }) => {
       >
         <CartIcon />
       </button>
-      
+
       {isLoggedIn ? (
-        <Button 
-            variant="primary" 
-            className="flex items-center gap-2 !px-6"
-            onClick={() => navigate('/profile')}
+        <Button
+          variant="primary"
+          className="flex items-center gap-2 !px-6"
+          onClick={() => navigate('/profile')}
         >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-            </svg>
-            Profil
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+          </svg>
+          Profil
         </Button>
       ) : (
-          <Button variant="ghost" onClick={() => navigate('/login')}>
-            Login
-          </Button>
+        <Button variant="ghost" onClick={() => navigate('/login')}>
+          Login
+        </Button>
       )}
 
       {/* Temporary Profile Button - Removed or kept if needed for testing? User asked to adjust code "project saya" so I assume cleaning up is good. I will remove the temp button as I have a real one above. Or did the user want it? The prev code had it. I'll keep it but updated, just in case. */}
@@ -42,7 +42,7 @@ const NavActions = ({ isLoggedIn }) => {
 
       {!isLoggedIn && (
         <Button variant="primary" onClick={() => navigate('/register')}>
-            Registrasi
+          Registrasi
         </Button>
       )}
     </div>
