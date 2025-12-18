@@ -87,7 +87,25 @@ class UserManagementController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->ensureAdmin();
+        $actor = Auth::user();
+
+        if (!$actor) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $isAdmin = $actor->role === 'admin';
+        $isSelf = (string) $actor->idUser === (string) $id;
+
+        // Hanya admin boleh ubah siapa saja; pelanggan hanya boleh ubah dirinya sendiri.
+        if (!$isAdmin && !$isSelf) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Forbidden: tidak diizinkan',
+            ], 403);
+        }
 
         $user = users::find($id);
 
@@ -98,16 +116,26 @@ class UserManagementController extends Controller
             ], 404);
         }
 
-        $data = Validator::make($request->all(), [
+        $rules = [
             'nama' => 'bail|sometimes|required|string|max:255',
             'alamat' => 'bail|sometimes|nullable|string|max:255',
             'jenisKelamin' => 'bail|sometimes|nullable|string|max:20',
             'tanggalLahir' => 'bail|sometimes|nullable|date',
-            'role' => 'bail|sometimes|required|string|in:admin,pelanggan',
             'email' => 'bail|sometimes|required|email:rfc,dns|unique:user,email,' . $id . ',idUser',
             'nomorWa' => 'bail|sometimes|nullable|string|max:20',
             'password' => 'bail|sometimes|required|string|min:6',
-        ])->validate();
+        ];
+
+        // Hanya admin boleh ubah role
+        if ($isAdmin) {
+            $rules['role'] = 'bail|sometimes|required|string|in:admin,pelanggan';
+        }
+
+        $data = Validator::make($request->all(), $rules)->validate();
+
+        if (!$isAdmin) {
+            unset($data['role']);
+        }
 
         // Hash password jika diisi
         if (isset($data['password'])) {

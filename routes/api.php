@@ -25,6 +25,8 @@ Route::get('/test', function () {
     ]);
 });
 
+Route::get('/ping', fn() => response()->json(['status' => 'ok']));
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
