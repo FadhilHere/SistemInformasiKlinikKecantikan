@@ -5,6 +5,7 @@ import DatePicker, { registerLocale } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
+import { apiFetch } from '../lib/api'
 
 registerLocale('id', id)
 
@@ -95,8 +96,12 @@ const ReservationPage = ({ isLoggedIn }) => {
   const [showModal, setShowModal] = useState(false)
 
   const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
-  const [selectedDoctor, setSelectedDoctor] = useState('dr. Widya')
+  // selectedDoctor is initialized via the state block below
   const [selectedDate, setSelectedDate] = useState(new Date())
+  
+  // Doctor options state
+  const [doctorOptions, setDoctorOptions] = useState([{ value: 'loading', label: 'Memuat data...' }])
+  const [selectedDoctor, setSelectedDoctor] = useState('') // Start empty to force selection update upon load
   
   // Schedules state fetched from backend
   const [schedules, setSchedules] = useState([])
@@ -105,34 +110,60 @@ const ReservationPage = ({ isLoggedIn }) => {
   const currentDayName = format(selectedDate, 'EEEE', { locale: id })
   const formattedDate = format(selectedDate, 'd MMMM yyyy', { locale: id })
 
+  // ... (keep useEffect as is, but logic inside changed slightly in next step)
+
   useEffect(() => {
-    const fetchSchedules = async () => {
+    const initData = async () => {
+        setLoadingSchedule(true)
+        
+        // 1. Fetch Schedules
         try {
-            setLoadingSchedule(true)
-            const response = await apiFetch('/api/jadwal-reservasi')
-            if (response.success && Array.isArray(response.data)) {
-                // Map backend data to UI format
-                // Backend fields: jamMulai, jamSelesai.
-                // We assume these are the 'available' slots.
-                // Status logic: currently simple, if it exists in DB it's a valid slot. 
-                // We default to 'available' since we don't have booking data yet.
-                const mapped = response.data.map(item => ({
+            const scheduleRes = await apiFetch('/api/jadwal-reservasi')
+            if (scheduleRes.success && Array.isArray(scheduleRes.data)) {
+                const mapped = scheduleRes.data.map(item => ({
                     id: item.id || item.idJadwal,
-                    time: item.jamMulai?.substring(0, 5), // Format HH:MM:SS -> HH:MM
+                    time: item.jamMulai?.substring(0, 5),
                     endTime: item.jamSelesai?.substring(0, 5),
-                    status: 'available' // Defaulting to available as per current instructions
+                    status: 'available'
                 }))
-                // Sort by time
                 mapped.sort((a, b) => a.time.localeCompare(b.time))
                 setSchedules(mapped)
+            } else {
+                setSchedules([])
             }
-        } catch (error) {
-            console.error("Error fetching schedules:", error)
+        } catch (scheduleError) {
+            console.error("Error fetching schedules:", scheduleError)
+            // Keep schedules empty or show error toast
         } finally {
             setLoadingSchedule(false)
         }
+
+        // 2. Fetch Doctors
+        try {
+            const doctorRes = await apiFetch('/api/profil-dokter')
+            if (doctorRes.success && Array.isArray(doctorRes.data) && doctorRes.data.length > 0) {
+                const options = doctorRes.data.map(d => ({ 
+                    value: d.nama, 
+                    label: d.nama 
+                }))
+                setDoctorOptions(options)
+                
+                // Auto-select first doctor
+                if (options.length > 0) {
+                    setSelectedDoctor(options[0].value)
+                }
+            } else {
+                 setDoctorOptions([{ value: '-', label: 'Tidak ada dokter' }])
+                 // Don't auto-select '-' if you want to force choice, or do:
+                 setSelectedDoctor('-')
+            }
+        } catch (doctorError) {
+            console.error("Error fetching doctors:", doctorError)
+            const errorMsg = doctorError.message || 'Gagal memuat'
+            setDoctorOptions([{ value: 'error', label: `Error: ${errorMsg}` }])
+        }
     }
-    fetchSchedules()
+    initData()
   }, [])
 
   const treatments = [
@@ -140,17 +171,11 @@ const ReservationPage = ({ isLoggedIn }) => {
     { value: 'Whitening Treatment', label: 'Whitening Treatment' },
     { value: 'Anti Aging', label: 'Anti Aging' }
   ]
-  
-  const doctors = [
-    { value: 'dr. Widya', label: 'dr. Widya' },
-    { value: 'dr. Budi', label: 'dr. Budi' },
-    { value: '-', label: '-' }
-  ]
 
   const availableCount = schedules.filter(s => s.status === 'available').length
   const bookedCount = schedules.filter(s => s.status === 'booked').length
 
-  const isDoctorAvailable = selectedDoctor !== '-'
+  const isDoctorAvailable = selectedDoctor && selectedDoctor !== '-'
 
   const handleSlotClick = (slot) => {
     if (slot.status === 'available') {
@@ -201,7 +226,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                 <CustomSelect 
                     label="Dokter Yang Menghandle" 
                     value={selectedDoctor} 
-                    options={doctors} 
+                    options={doctorOptions} 
                     onChange={setSelectedDoctor} 
                 />
                 </div>
@@ -243,26 +268,37 @@ const ReservationPage = ({ isLoggedIn }) => {
                     {loadingSchedule ? (
                         <div className="flex justify-center py-20 text-gray-500">Memuat jadwal...</div>
                     ) : isDoctorAvailable ? (
-                        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-                            {schedules.map((slot, index) => (
-                                <div 
-                                    key={index}
-                                    onClick={() => handleSlotClick(slot)}
-                                    className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition ${
-                                        slot.status === 'available' 
-                                        ? 'bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer' 
-                                        : 'bg-white text-gray-400 border border-gray-200'
-                                    }`}
-                                >
-                                    <span className="text-xl font-bold">{slot.time} WIB</span>
-                                    <div className={`mt-2 rounded-full px-4 py-1 text-xs font-bold ${
-                                        slot.status === 'available' ? 'bg-white text-[#4aa731]' : 'bg-gray-300 text-white'
-                                    }`}>
-                                        {slot.status === 'available' ? 'Kosong' : 'Sudah Terisi'}
+                        schedules.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
+                                {schedules.map((slot, index) => (
+                                    <div 
+                                        key={index}
+                                        onClick={() => handleSlotClick(slot)}
+                                        className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition ${
+                                            slot.status === 'available' 
+                                            ? 'bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer' 
+                                            : 'bg-white text-gray-400 border border-gray-200'
+                                        }`}
+                                    >
+                                        <span className="text-xl font-bold">{slot.time} WIB</span>
+                                        <div className={`mt-2 rounded-full px-4 py-1 text-xs font-bold ${
+                                            slot.status === 'available' ? 'bg-white text-[#4aa731]' : 'bg-gray-300 text-white'
+                                        }`}>
+                                            {slot.status === 'available' ? 'Kosong' : 'Sudah Terisi'}
+                                        </div>
                                     </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex h-full flex-col items-center justify-center py-20">
+                                <div className="mb-6 rounded-full border-4 border-gray-300 p-4">
+                                     <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
                                 </div>
-                            ))}
-                        </div>
+                                <h2 className="text-xl font-bold text-gray-500">Jadwal reservasi tidak tersedia</h2>
+                            </div>
+                        )
                     ) : (
                         <div className="flex h-full flex-col items-center justify-center py-20">
                             <div className="mb-6 rounded-full border-4 border-[#4aa731] p-4">
