@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LogoIcon from '../components/atoms/LogoIcon';
 import EditProfileModal from './EditProfileModal';
 import LogoutConfirmModal from './LogoutConfirmModal';
@@ -22,8 +23,13 @@ const SidebarItem = ({ icon, label, active = false, onClick }) => (
 
 
 const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) => {
+    const navigate = useNavigate();
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+
+    const handleNavigation = (path) => {
+        navigate(`/${path}`);
+    };
 
     const handleLogoutClick = () => {
         setIsLogoutConfirmOpen(true);
@@ -32,6 +38,7 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
     const handleLogoutConfirm = () => {
         setIsLogoutConfirmOpen(false);
         onLogout && onLogout();
+        navigate('/');
     };
 
     const handleLogoutCancel = () => {
@@ -69,73 +76,73 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
                     icon={<DashboardIcon />}
                     label="Dashboard"
                     active={activeMenu === 'dashboard'}
-                    onClick={() => onNavigate && onNavigate('dashboard')}
+                    onClick={() => handleNavigation('dashboard')}
                 />
                 <SidebarItem
                     icon={<ProductIcon />}
                     label="Kelola Produk"
                     active={activeMenu === 'products'}
-                    onClick={() => onNavigate && onNavigate('products')}
+                    onClick={() => handleNavigation('products')}
                 />
                 <SidebarItem
                     icon={<PromoIcon />}
                     label="Kelola Promo"
                     active={activeMenu === 'promos'}
-                    onClick={() => onNavigate && onNavigate('promos')}
+                    onClick={() => handleNavigation('promos')}
                 />
                 <SidebarItem
                     icon={<EventIcon />}
                     label="Kelola Event"
                     active={activeMenu === 'events'}
-                    onClick={() => onNavigate && onNavigate('events')}
+                    onClick={() => handleNavigation('events')}
                 />
                 <SidebarItem
                     icon={<SalesIcon />}
                     label="Data Penjualan"
                     active={activeMenu === 'sales'}
-                    onClick={() => onNavigate && onNavigate('sales')}
+                    onClick={() => handleNavigation('sales')}
                 />
                 <SidebarItem
                     icon={<UserIcon />}
                     label="Kelola Profil Dokter"
                     active={activeMenu === 'doctor'}
-                    onClick={() => onNavigate && onNavigate('doctor')}
+                    onClick={() => handleNavigation('doctor')}
                 />
                 <SidebarItem
                     icon={<UserGroupIcon />}
                     label="Kelola User"
                     active={activeMenu === 'users'}
-                    onClick={() => onNavigate && onNavigate('users')}
+                    onClick={() => handleNavigation('users')}
                 />
                 <SidebarItem
                     icon={<ReservationIcon />}
                     label="Kelola Reservasi Treatment"
                     active={activeMenu === 'reservations'}
-                    onClick={() => onNavigate && onNavigate('reservations')}
+                    onClick={() => handleNavigation('reservations')}
                 />
                 <SidebarItem
                     icon={<ScheduleIcon />}
                     label="Kelola Jadwal Reservasi Treatment"
                     active={activeMenu === 'schedules'}
-                    onClick={() => onNavigate && onNavigate('schedules')}
+                    onClick={() => handleNavigation('schedules')}
                 />
                 <SidebarItem
                     icon={<CategoryIcon />}
                     label="Kelola Kategori Produk"
                     active={activeMenu === 'categories'}
-                    onClick={() => onNavigate && onNavigate('categories')}
+                    onClick={() => handleNavigation('categories')}
                 />
                 <SidebarItem
                     icon={<MessageIcon />}
                     label="Testimoni Customer"
                     active={activeMenu === 'testimonials'}
-                    onClick={() => onNavigate && onNavigate('testimonials')}
+                    onClick={() => handleNavigation('testimonials')}
                 />
                 <SidebarItem
                     icon={<CategoryIcon />}
                     label="Profil Klinik"
                     active={activeMenu === 'clinic-profile'}
-                    onClick={() => onNavigate && onNavigate('clinic-profile')}
+                    onClick={() => handleNavigation('clinic-profile')}
                 />
             </nav>
 

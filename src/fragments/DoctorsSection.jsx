@@ -23,11 +23,8 @@ const DoctorsSection = () => {
   return (
     <section className="flex flex-col gap-10">
       <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.4em] text-primary">
-          tim dokter
-        </p>
-        <h2 className="mt-2 text-3xl font-semibold text-brand">
-          Dokter kami siap membantu merawat kebutuhan kulitmu.
+        <h2 className="mt-2 text-3xl font-bold text-[#4aa731] md:text-4xl">
+          Dokter Kami Siap Membantu Merawat Dan Menjawab Kebutuhan Kulitmu.
         </h2>
       </div>
 

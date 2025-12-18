@@ -1,54 +1,53 @@
 import LogoIcon from '../components/atoms/LogoIcon'
-import footerImage from '../assets/image.svg'
 
 const Footer = () => {
   return (
     <footer className="mt-16">
-      <div
-        className="rounded-[36px] bg-cover bg-center p-12 text-white shadow-card"
-        style={{ backgroundImage: `url(${footerImage})` }}
-      >
-        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr]">
+      <div className="bg-[#2f7f00] py-12 text-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr] lg:px-8">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <LogoIcon size={56} className="bg-white/20 rounded-2xl p-2" />
+              <LogoIcon size={56} className="bg-white/20 rounded-full p-2" />
               <div>
-                <p className="text-3xl font-semibold leading-tight">mische</p>
-                <p className="text-xs tracking-[0.5em]">AESTHETIC CLINIC</p>
+                <p className="text-4xl font-normal font-sans tracking-tight">mische</p>
+                <p className="text-xs tracking-[0.4em] uppercase text-white/70">Aesthetic Clinic</p>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-white/80">
-              Klinik kecantikan terpercaya dengan layanan premium dan dokter
-              berpengalaman.
-            </p>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">Alamat</h3>
-            <p className="mt-2 text-sm text-white/80">
-              Jl. KH Ahmad Dahlan No.80, Sukajadi, Pekanbaru
+            <h3 className="text-xl font-bold mb-4">Alamat</h3>
+            <p className="text-sm leading-relaxed text-white/90 mb-2">
+              Jl. KH.Ahmad Dahlan No.80, Sukajadi, Pekanbaru
             </p>
-            <p className="text-sm text-white/80">+62 811 692 2551</p>
-            <h4 className="mt-4 text-lg font-semibold">Waktu Operasional</h4>
-            <p className="text-sm text-white/80">Setiap Hari 10 A.M - 7 P.M</p>
+            <p className="text-sm text-white/90">+628116922551</p>
+
+            <h3 className="text-xl font-bold mt-6 mb-4">Waktu Operasional</h3>
+            <p className="text-sm font-semibold text-white/90">Setiap Hari</p>
+            <p className="text-sm text-white/90">10 A.M - 7 P.M</p>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">Ikuti Kami</h3>
-            <ul className="mt-2 space-y-1 text-sm text-white/80">
-              <li>Facebook</li>
-              <li>Instagram</li>
-              <li>TikTok</li>
+            <h3 className="text-xl font-bold mb-4">Ikuti Kami</h3>
+            <ul className="space-y-3 text-sm text-white/90">
+              <li><a href="#" className="hover:underline">Facebook</a></li>
+              <li><a href="#" className="hover:underline">Instagram</a></li>
+              <li><a href="#" className="hover:underline">Tiktok</a></li>
             </ul>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col items-center justify-between gap-3 rounded-3xl bg-[#131313] px-6 py-4 text-xs text-white/70 md:flex-row">
-        <span>© 2023 Beautya. All rights reserved.</span>
-        <div className="flex gap-4">
-          <a href="#">Terms &amp; Conditions</a>
-          <a href="#">Privacy Policy</a>
+      <div className="bg-[#1a1a1a] py-6 text-xs text-white/70">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 md:flex-row lg:px-8">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">©</span>
+            <span>2023 Beautya. All Rights Reserved.</span>
+          </div>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white">Terms & Conditions</a>
+            <a href="#" className="hover:text-white">Privacy Policy</a>
+          </div>
         </div>
       </div>
     </footer>
