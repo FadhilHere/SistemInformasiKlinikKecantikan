@@ -2,6 +2,8 @@ import { useState } from 'react'
 import InputField from '../components/atoms/InputField'
 import Button from '../components/atoms/Button'
 import LogoIcon from '../components/atoms/LogoIcon'
+import { isValidEmail } from '../utils/validators'
+import { verifyLogin } from '../utils/security'
 
 const INITIAL_FORM = {
   email: '',
@@ -17,19 +19,34 @@ const LoginForm = ({ onLoginSuccess }) => {
     setFormValues((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    
+    // Reset status
+    setStatusMessage('')
+
+    // Validation
     if (!formValues.email || !formValues.password) {
       setStatusMessage('Email dan password wajib diisi.')
       return
     }
 
-    if (formValues.email === 'as22si@mahsiswa.pcr.ac.id' && formValues.password === 'acop123') {
-        setStatusMessage('Login Berhasil!')
-        // Call callback immediately or after short delay
-        if (onLoginSuccess) onLoginSuccess()
-    } else {
-        setStatusMessage('Email atau password salah.')
+    if (!isValidEmail(formValues.email)) {
+        setStatusMessage('Format email tidak valid.')
+        return
+    }
+
+    try {
+        const isValid = await verifyLogin(formValues.email, formValues.password);
+        if (isValid) {
+            setStatusMessage('Login Berhasil!')
+            if (onLoginSuccess) onLoginSuccess()
+        } else {
+            setStatusMessage('Email atau password salah.')
+        }
+    } catch (error) {
+        setStatusMessage('Terjadi kesalahan saat login.')
+        console.error(error)
     }
   }
 
