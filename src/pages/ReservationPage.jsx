@@ -97,9 +97,43 @@ const ReservationPage = ({ isLoggedIn }) => {
   const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
   const [selectedDoctor, setSelectedDoctor] = useState('dr. Widya')
   const [selectedDate, setSelectedDate] = useState(new Date())
+  
+  // Schedules state fetched from backend
+  const [schedules, setSchedules] = useState([])
+  const [loadingSchedule, setLoadingSchedule] = useState(true)
 
   const currentDayName = format(selectedDate, 'EEEE', { locale: id })
   const formattedDate = format(selectedDate, 'd MMMM yyyy', { locale: id })
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+        try {
+            setLoadingSchedule(true)
+            const response = await apiFetch('/api/jadwal-reservasi')
+            if (response.success && Array.isArray(response.data)) {
+                // Map backend data to UI format
+                // Backend fields: jamMulai, jamSelesai.
+                // We assume these are the 'available' slots.
+                // Status logic: currently simple, if it exists in DB it's a valid slot. 
+                // We default to 'available' since we don't have booking data yet.
+                const mapped = response.data.map(item => ({
+                    id: item.id || item.idJadwal,
+                    time: item.jamMulai?.substring(0, 5), // Format HH:MM:SS -> HH:MM
+                    endTime: item.jamSelesai?.substring(0, 5),
+                    status: 'available' // Defaulting to available as per current instructions
+                }))
+                // Sort by time
+                mapped.sort((a, b) => a.time.localeCompare(b.time))
+                setSchedules(mapped)
+            }
+        } catch (error) {
+            console.error("Error fetching schedules:", error)
+        } finally {
+            setLoadingSchedule(false)
+        }
+    }
+    fetchSchedules()
+  }, [])
 
   const treatments = [
     { value: 'Acne Treatment', label: 'Acne Treatment' },
@@ -111,21 +145,6 @@ const ReservationPage = ({ isLoggedIn }) => {
     { value: 'dr. Widya', label: 'dr. Widya' },
     { value: 'dr. Budi', label: 'dr. Budi' },
     { value: '-', label: '-' }
-  ]
-
-  const schedules = [
-    { time: '07:00', status: 'available' },
-    { time: '08:00', status: 'booked' },
-    { time: '09:00', status: 'available' },
-    { time: '10:00', status: 'booked' },
-    { time: '11:00', status: 'booked' },
-    { time: '12:00', status: 'booked' },
-    { time: '13:00', status: 'available' },
-    { time: '14:00', status: 'available' },
-    { time: '15:00', status: 'booked' },
-    { time: '16:00', status: 'available' },
-    { time: '17:00', status: 'available' },
-    { time: '18:00', status: 'available' },
   ]
 
   const availableCount = schedules.filter(s => s.status === 'available').length
@@ -221,7 +240,9 @@ const ReservationPage = ({ isLoggedIn }) => {
 
                 {/* Main Content Area */}
                 <div className="min-h-[400px] rounded-[40px] bg-white p-8 shadow-xl">
-                    {isDoctorAvailable ? (
+                    {loadingSchedule ? (
+                        <div className="flex justify-center py-20 text-gray-500">Memuat jadwal...</div>
+                    ) : isDoctorAvailable ? (
                         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
                             {schedules.map((slot, index) => (
                                 <div 
@@ -284,7 +305,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                         <div className="flex flex-col gap-3">
                             <label className="text-lg font-medium text-black">Jam Selesai Treatment</label>
                             <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                {selectedSlot?.time} WIB
+                                {selectedSlot?.endTime || '-'} WIB
                             </div>
                         </div>
 

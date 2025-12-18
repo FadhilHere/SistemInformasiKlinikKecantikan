@@ -1,15 +1,6 @@
-import { useState } from 'react'
-import Navbar from '../fragments/Navbar'
-import Footer from '../fragments/Footer'
-import DatePicker from "react-datepicker"
-import "react-datepicker/dist/react-datepicker.css"
-import { 
-    isValidEmail, 
-    isValidPassword, 
-    isValidPhone, 
-    isNotEmpty, 
-    sanitizeInput 
-} from '../utils/validators'
+import { apiFetch } from '../lib/api'
+
+// ... imports
 
 const ProfilePage = ({ isLoggedIn, onLogout }) => {
   const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
@@ -24,6 +15,33 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
   const [password, setPassword] = useState("12345")
   const [confirmPassword, setConfirmPassword] = useState("12345")
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' })
+
+  // Reservation Data State
+  const [reservations, setReservations] = useState([])
+  const [isReservationsLoading, setIsReservationsLoading] = useState(false)
+
+  useEffect(() => {
+    if (activeTab === 'reservation_history') {
+        fetchReservations()
+    }
+  }, [activeTab])
+
+  const fetchReservations = async () => {
+    try {
+        setIsReservationsLoading(true)
+        const response = await apiFetch('/api/reservasi')
+        if (response.success && Array.isArray(response.data)) {
+            setReservations(response.data)
+        } else {
+            setReservations([])
+        }
+    } catch (err) {
+        console.error('Error fetching reservations:', err)
+        // Optionally set error state
+    } finally {
+        setIsReservationsLoading(false)
+    }
+  }
 
   const handleSave = () => {
     // Basic Empty Checks
@@ -70,45 +88,6 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
     console.log("Saving clean data:", cleanData)
     setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
   }
-
-  const reservationHistory = [
-    {
-        code: 'P01',
-        date: '25 Desember 2025',
-        time: '09.00 - 10.00',
-        treatment: 'Acne',
-        status: 'Terkonfirmasi',
-        statusColor: 'bg-[#53c41a]',
-        canEdit: true
-    },
-    {
-        code: 'P02',
-        date: '23 Desember 2025',
-        time: '09.00 - 10.00',
-        treatment: 'Bopeng',
-        status: 'Belum Di Konfirmasi',
-        statusColor: 'bg-[#b69036]',
-        canEdit: true
-    },
-    {
-        code: 'P03',
-        date: '5 Desember 2025',
-        time: '09.00 - 10.00',
-        treatment: 'Acne',
-        status: 'Terkonfirmasi Merubah Jadwal',
-        statusColor: 'bg-[#53c41a]',
-        canEdit: false
-    },
-    {
-        code: 'P04',
-        date: '15 Desember 2025',
-        time: '09.00 - 10.00',
-        treatment: 'Bopeng',
-        status: 'Belum Di Konfirmasi Merubah Jadwal',
-        statusColor: 'bg-[#b69036]',
-        canEdit: false
-    },
-  ]
 
   const productHistory = [
     {
@@ -377,34 +356,70 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                             </tr>
                         </thead>
                         <tbody className="text-base font-medium text-black">
-                            {reservationHistory.map((item, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                    <td className="p-4">{item.code}</td>
-                                    <td className="p-4">{item.date}</td>
-                                    <td className="p-4">{item.time}</td>
-                                    <td className="p-4">{item.treatment}</td>
-                                    <td className="p-4">
-                                        <div className="flex justify-center">
-                                            <span className={`rounded-full px-6 py-2 text-white shadow-md ${item.statusColor} max-w-[200px] leading-tight`}>
-                                                {item.status}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex justify-center">
-                                            {item.canEdit ? (
-                                                <button className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]">
-                                                    Ubah Jadwal
-                                                </button>
-                                            ) : (
-                                                <button disabled className="cursor-not-allowed rounded-full bg-[#cfcfcf] px-6 py-2 text-white shadow-md">
-                                                    Ubah Jadwal
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
+                            {isReservationsLoading ? (
+                                <tr>
+                                    <td colSpan="6" className="py-8 text-center text-gray-500">Memuat riwayat reservasi...</td>
                                 </tr>
-                            ))}
+                            ) : reservations.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="py-8 text-center text-gray-500">Belum ada riwayat reservasi.</td>
+                                </tr>
+                            ) : (
+                                reservations.map((item, index) => {
+                                    // Helper for formatting status style
+                                    const getStatusColor = (status) => {
+                                        const s = status?.toLowerCase() || ''
+                                        if (s.includes('selesai') || s.includes('terkonfirmasi')) return 'bg-[#53c41a]'
+                                        if (s.includes('belum') || s.includes('proses')) return 'bg-[#b69036]'
+                                        if (s.includes('batal')) return 'bg-red-500'
+                                        return 'bg-gray-400'
+                                    }
+                                    
+                                    // Helper for date formatting
+                                    const formatDate = (dateString) => {
+                                        if (!dateString) return '-'
+                                        return new Date(dateString).toLocaleDateString('id-ID', {
+                                            day: 'numeric', month: 'long', year: 'numeric'
+                                        })
+                                    }
+
+                                    return (
+                                        <tr key={item.idReservasi || item.id || index} className="hover:bg-gray-50">
+                                            {/* Code: fallback to simple ID if no code */}
+                                            <td className="p-4">{item.kodeReservasi || `#${item.idReservasi || item.id}`}</td>
+                                            
+                                            {/* Date */}
+                                            <td className="p-4">{formatDate(item.tanggalReservasi || item.tanggal)}</td>
+                                            
+                                            {/* Time */}
+                                            <td className="p-4">{item.jamMulai ? `${item.jamMulai} - ${item.jamSelesai}` : '-'}</td>
+                                            
+                                            {/* Treatment: Check if treatment is object or string */}
+                                            <td className="p-4">
+                                                {item.treatment?.namaTreatment || item.treatment?.nama || item.jenisTreatment || '-'}
+                                            </td>
+                                            
+                                            {/* Status */}
+                                            <td className="p-4">
+                                                <div className="flex justify-center">
+                                                    <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} max-w-[200px] leading-tight`}>
+                                                        {item.status || 'Pending'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            
+                                            {/* Action */}
+                                            <td className="p-4">
+                                                <div className="flex justify-center">
+                                                    <button className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]">
+                                                        Ubah Jadwal
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })
+                            )}
                         </tbody>
                     </table>
 

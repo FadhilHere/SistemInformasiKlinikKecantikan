@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import PromoCard from '../components/molecules/PromoCard'
+import Footer from '../fragments/Footer'
 import { apiFetch, API_BASE_URL } from '../lib/api'
 
 const filterIcon = (
@@ -147,6 +148,7 @@ const PromoPage = ({ isLoggedIn }) => {
             </section>
         )}
       </main>
+      <Footer />
     </div>
   )
 }

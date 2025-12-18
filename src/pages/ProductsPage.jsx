@@ -3,6 +3,7 @@ import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
 import ProductCategoryTabs from '../components/molecules/ProductCategoryTabs'
 import { apiFetch } from '../lib/api'
+import Footer from '../fragments/Footer'
 
 const heroImage =
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80'
@@ -156,6 +157,7 @@ const ProductsPage = ({ isLoggedIn }) => {
           <Button className="px-10 py-3">Lihat Produk Lainnya</Button>
         </div>
       </main>
+        <Footer />
     </div>
   )
 }

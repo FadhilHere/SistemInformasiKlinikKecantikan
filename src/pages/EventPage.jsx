@@ -1,67 +1,99 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
+import { apiFetch, API_BASE_URL } from '../lib/api'
 
 const EventPage = ({ isLoggedIn }) => {
   const navigate = useNavigate()
+  const [events, setEvents] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   
-  const events = [
-    {
-      id: 1,
-      title: 'Seminar Kecantikan DI Politeknik Caltex Riau',
-      date: '23 Nov 2025',
-      description: 'Bakal Di Adain Di Kampus Ternama Di Riau Yaitu PCR Untuk Penjelasan Nya.....',
-      image: 'https://placehold.co/600x400/e2e8f0/1e293b?text=Event+Image'
-    },
-    {
-      id: 2,
-      title: 'Seminar Kecantikan DI Politeknik Caltex Riau',
-      date: '23 Nov 2025',
-      description: 'Bakal Di Adain Di Kampus Ternama Di Riau Yaitu PCR Untuk Penjelasan Nya.....',
-      image: 'https://placehold.co/600x400/e2e8f0/1e293b?text=Event+Image'
-    },
-    {
-      id: 3,
-      title: 'Seminar Kecantikan DI Politeknik Caltex Riau',
-      date: '23 Nov 2025',
-      description: 'Bakal Di Adain Di Kampus Ternama Di Riau Yaitu PCR Untuk Penjelasan Nya.....',
-      image: 'https://placehold.co/600x400/e2e8f0/1e293b?text=Event+Image'
-    },
-    {
-      id: 4,
-      title: 'Seminar Kecantikan DI Politeknik Caltex Riau',
-      date: '23 Nov 2025',
-      description: 'Bakal Di Adain Di Kampus Ternama Di Riau Yaitu PCR Untuk Penjelasan Nya.....',
-      image: 'https://placehold.co/600x400/e2e8f0/1e293b?text=Event+Image'
-    }
-  ]
-
-  const summaryCards = [
+  // Future implementation: fetch counts from API
+  const [summaryCards, setSummaryCards] = useState([
     {
       title: 'Event Yang Akan Di Selenggarakan',
-      count: '4 Event',
+      count: '...',
       status: 'Akan Berlangsung',
       bgImage: 'https://placehold.co/600x200/53c41a/ffffff?text=Upcoming'
     },
     {
       title: 'Event Yang Sudah Di Selenggarakan',
-      count: '4 Event',
-      status: 'Akan Berlangsung',
+      count: '...',
+      status: 'Sudah Selesai',
       bgImage: 'https://placehold.co/600x200/64748b/ffffff?text=Past'
     },
     {
       title: 'Event Yang Sedang Di Selenggarakan',
-      count: '4 Event',
+      count: '...',
       status: 'Sedang Berlangsung',
       bgImage: 'https://placehold.co/600x200/3b82f6/ffffff?text=Ongoing'
     }
-  ]
+  ])
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true)
+        const response = await apiFetch('/api/event')
+        if (response.success && Array.isArray(response.data)) {
+          setEvents(response.data)
+          updateSummaryCounts(response.data)
+        } else {
+          setEvents([])
+        }
+      } catch (err) {
+        console.error('Error fetching events:', err)
+        setError('Gagal memuat event.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchEvents()
+  }, [])
+
+  const updateSummaryCounts = (data) => {
+      const now = new Date()
+      let upcoming = 0
+      let past = 0
+      let ongoing = 0
+
+      data.forEach(event => {
+          const start = new Date(event.tanggalMulai)
+          const end = new Date(event.tanggalSelesai)
+          
+          if (now < start) upcoming++
+          else if (now > end) past++
+          else ongoing++
+      })
+
+      setSummaryCards(prev => [
+          { ...prev[0], count: `${upcoming} Event` },
+          { ...prev[1], count: `${past} Event` },
+          { ...prev[2], count: `${ongoing} Event` }
+      ])
+  }
+
+  const getImageUrl = (path) => {
+    if (!path) return 'https://via.placeholder.com/600x400?text=No+Image'
+    if (path.startsWith('http')) return path
+    return `${API_BASE_URL}/storage/${path}`
+  }
+
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    })
+  }
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen bg-background font-sans w-full flex flex-col">
       <Navbar isLoggedIn={isLoggedIn} />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-grow w-full">
         {/* Hero Section */}
         <div className="relative mb-12 overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-[#7ce645] p-8 text-white shadow-lg md:p-12">
           <div className="relative z-10 max-w-2xl">
@@ -120,37 +152,45 @@ const EventPage = ({ isLoggedIn }) => {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Main Events List (Left Column) */}
           <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className="overflow-hidden rounded-2xl bg-white shadow-card transition hover:shadow-lg"
-                >
-                  <div className="relative h-48 w-full">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
-                      {event.date}
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="mb-2 text-lg font-bold text-brand">
-                      {event.title}
-                    </h3>
-                    <p className="text-sm text-gray-500">{event.description}</p>
-                    <button 
-                      onClick={() => navigate('/event-detail')}
-                      className="mt-4 w-full rounded-full bg-[#4aa731] py-2 text-sm font-bold text-white hover:bg-[#3d8b28]"
+            {isLoading ? (
+                <div className="text-center py-10">Memuat event...</div>
+            ) : error ? (
+                <div className="text-center py-10 text-red-500">{error}</div>
+            ) : events.length === 0 ? (
+                <div className="text-center py-10">Belum ada event.</div>
+            ) : (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {events.map((event) => (
+                    <div
+                    key={event.id || event.idEvent}
+                    className="overflow-hidden rounded-2xl bg-white shadow-card transition hover:shadow-lg"
                     >
-                      Lihat Detail
-                    </button>
-                  </div>
+                    <div className="relative h-48 w-full">
+                        <img
+                        src={getImageUrl(event.foto)}
+                        alt={event.nama}
+                        className="h-full w-full object-cover"
+                        />
+                        <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-medium text-white">
+                        {formatDate(event.tanggalMulai)}
+                        </div>
+                    </div>
+                    <div className="p-6">
+                        <h3 className="mb-2 text-lg font-bold text-brand line-clamp-2 min-h-[56px]">
+                        {event.nama}
+                        </h3>
+                        <p className="text-sm text-gray-500 line-clamp-2">{event.deskripsi}</p>
+                        <button 
+                        onClick={() => navigate(`/event/${event.id || event.idEvent}`)}
+                        className="mt-4 w-full rounded-full bg-[#4aa731] py-2 text-sm font-bold text-white hover:bg-[#3d8b28]"
+                        >
+                        Lihat Detail
+                        </button>
+                    </div>
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
+            )}
           </div>
 
           {/* Sidebar Summary (Right Column) */}
@@ -167,8 +207,7 @@ const EventPage = ({ isLoggedIn }) => {
               >
                 <h3 className="mb-2 text-xl font-bold">{card.title}</h3>
                 <p className="text-sm opacity-90">
-                  Terdapat <span className="font-bold">{card.count}</span> Yang
-                  Akan Berlangsung
+                  Terdapat <span className="font-bold">{card.count}</span>
                 </p>
               </div>
             ))}
@@ -176,9 +215,7 @@ const EventPage = ({ isLoggedIn }) => {
         </div>
       </main>
 
-      <div className="mx-auto max-w-7xl px-4 pb-12">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   )
 }

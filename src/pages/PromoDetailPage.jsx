@@ -175,6 +175,7 @@ const PromoDetailPage = ({ isLoggedIn }) => {
           </div>
         </section>
       </main>
+  
     </div>
   )
 }
