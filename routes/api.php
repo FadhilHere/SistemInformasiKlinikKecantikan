@@ -92,28 +92,48 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/promo/{id}', [PromoController::class, 'update']);
     Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
 
-    // Bagian Hardy
-    // CRUD kategori produk - hanya admin (dicek di controller)
+    // --- RESTORED ROUTES ---
+
+    // Keranjang (Cart)
+    Route::get('/keranjang', [KeranjangController::class, 'index']);
+    Route::post('/keranjang', [KeranjangController::class, 'store']);
+    Route::put('/keranjang/{id}', [KeranjangController::class, 'update']);
+    Route::delete('/keranjang/{id}', [KeranjangController::class, 'destroy']);
+    Route::delete('/keranjang-clear', [KeranjangController::class, 'clear']);
+
+    // Penjualan & Checkout
+    Route::get('/penjualan', [PenjualanController::class, 'index']);
+    Route::get('/penjualan/{id}', [PenjualanController::class, 'show']);
+    Route::post('/checkout', [PenjualanController::class, 'checkout']);
+    Route::patch('/penjualan/{id}/status', [PenjualanController::class, 'updateStatus']);
+
+    // Detail Penjualan
+    Route::get('/detail-penjualan', [DetailPenjualanController::class, 'index']);
+    Route::get('/detail-penjualan/{id}', [DetailPenjualanController::class, 'show']);
+
+    // Admin CRUD for Products, Categories, and Testimonials
     Route::post('/kategori-produk', [KategoriProdukController::class, 'store']);
     Route::put('/kategori-produk/{id}', [KategoriProdukController::class, 'update']);
     Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
+
+    Route::post('/produk-klinik', [ProdukKlinikController::class, 'store']);
+    Route::put('/produk-klinik/{id}', [ProdukKlinikController::class, 'update']);
+    Route::patch('/produk-klinik/{id}/stock', [ProdukKlinikController::class, 'updateStock']);
+    Route::delete('/produk-klinik/{id}', [ProdukKlinikController::class, 'destroy']);
+
+    //Done
+    Route::post('/testimoni', [TestimoniController::class, 'store']);
+    Route::put('/testimoni/{id}', [TestimoniController::class, 'update']);
+    Route::delete('/testimoni/{id}', [TestimoniController::class, 'destroy']);
 });
 
-// Public routes untuk kategori produk (read-only)
+// --- PUBLIC ROUTES (Read-Only) ---
+
 Route::get('/kategori-produk', [KategoriProdukController::class, 'index']);
 Route::get('/kategori-produk/{id}', [KategoriProdukController::class, 'show']);
 
-// Protected routes untuk kategori produk (admin only)
-Route::middleware('auth:api')->group(function () {
-    Route::post('/kategori-produk', [KategoriProdukController::class, 'store']);
-    Route::put('/kategori-produk/{id}', [KategoriProdukController::class, 'update']);
-    Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
-});
-
-// Public routes untuk produk klinik (read-only)
 Route::get('/produk-klinik', [ProdukKlinikController::class, 'index']);
 Route::get('/produk-klinik/{id}', [ProdukKlinikController::class, 'show']);
 
-// Public routes untuk testimoni (read-only)
 Route::get('/testimoni', [TestimoniController::class, 'index']);
 Route::get('/testimoni/{id}', [TestimoniController::class, 'show']);
