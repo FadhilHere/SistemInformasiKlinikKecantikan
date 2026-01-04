@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { apiFetch } from '../lib/api'
-
-// ... imports
-=======
 import { useState } from 'react'
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
@@ -15,45 +10,10 @@ import {
     isNotEmpty,
     sanitizeInput
 } from '../utils/validators'
->>>>>>> origin/mische-frontend
 
 const ProfilePage = ({ isLoggedIn, onLogout }) => {
     const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
 
-<<<<<<< HEAD
-  // Reservation Data State
-  const [reservations, setReservations] = useState([])
-  const [isReservationsLoading, setIsReservationsLoading] = useState(false)
-
-  useEffect(() => {
-    if (activeTab === 'reservation_history') {
-        fetchReservations()
-    }
-  }, [activeTab])
-
-  const fetchReservations = async () => {
-    try {
-        setIsReservationsLoading(true)
-        const response = await apiFetch('/api/reservasi')
-        if (response.success && Array.isArray(response.data)) {
-            setReservations(response.data)
-        } else {
-            setReservations([])
-        }
-    } catch (err) {
-        console.error('Error fetching reservations:', err)
-        // Optionally set error state
-    } finally {
-        setIsReservationsLoading(false)
-    }
-  }
-
-  const handleSave = () => {
-    // Basic Empty Checks
-    if (!isNotEmpty(name) || !isNotEmpty(address) || !birthDate || !isNotEmpty(whatsapp) || !isNotEmpty(email)) {
-        setStatusMessage({ type: 'error', text: 'Semua data diri wajib diisi.' })
-        return
-=======
     // Form States
     const [name, setName] = useState("Bintang Puspita")
     const [address, setAddress] = useState("Jl. Mangkubumi")
@@ -109,7 +69,6 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
 
         console.log("Saving clean data:", cleanData)
         setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
->>>>>>> origin/mische-frontend
     }
 
     const reservationHistory = [
@@ -179,83 +138,6 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
         <div className="min-h-screen bg-[#f9f9f9] font-sans">
             <Navbar isLoggedIn={isLoggedIn} />
 
-<<<<<<< HEAD
-    // Sanitize
-    const cleanData = {
-        name: sanitizeInput(name),
-        address: sanitizeInput(address),
-        gender: sanitizeInput(gender), // Select, but good to be safe
-        whatsapp: sanitizeInput(whatsapp),
-        email: sanitizeInput(email),
-        // Password usually hashed server side, we don't sanitize characters as they are effectively secrets
-    }
-
-    console.log("Saving clean data:", cleanData)
-    setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
-  }
-
-  const productHistory = [
-    {
-        code: 'P01',
-        date: '25 Desember 2025',
-        total: 'Rp 700.000',
-        status: 'Sedang Di Proses',
-        statusColor: 'bg-[#b69036]'
-    },
-    {
-        code: 'P02',
-        date: '26 Desember 2025',
-        total: 'Rp 160.000',
-        status: 'Selesai',
-        statusColor: 'bg-[#53c41a]'
-    },
-    {
-        code: 'P03',
-        date: '29 Desember 2025',
-        total: 'Rp 70.000',
-        status: 'Selesai',
-        statusColor: 'bg-[#53c41a]'
-    },
-  ]
-
-  return (
-    <div className="min-h-screen bg-[#f9f9f9] font-sans">
-      <Navbar isLoggedIn={isLoggedIn} />
-
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
-        {/* Banner */}
-        <div className="relative mb-8 overflow-hidden rounded-[30px] bg-gradient-to-r from-[#4aa731] to-[#65ce4d] px-8 py-10 text-white shadow-lg md:px-12 md:py-14">
-            <div className="relative z-10 max-w-2xl">
-                <h1 className="mb-2 text-3xl font-bold md:text-4xl">
-                    {activeTab === 'profile' && 'Profil Saya'}
-                    {activeTab === 'reservation_history' && 'Riwayat Pemesanan Reservasi'}
-                    {activeTab === 'product_history' && 'Riwayat Pemesanan Produk'}
-                </h1>
-                <p className="max-w-lg text-sm md:text-base opacity-90">
-                    {activeTab === 'profile' && 'Kelola Informasi Profil Anda Untuk Mengontrol, Melindungi Dan Mengamankan Akun'}
-                    {activeTab === 'reservation_history' && 'Anda Dapat Melihat Keseluruhan Dari Riwayat Pemesanan Reservasi Anda'}
-                    {activeTab === 'product_history' && 'Anda Dapat Melihat Keseluruhan Dari Riwayat Pembelian Produk Anda'}
-                </p>
-            </div>
-             {/* Decorative Silhouette */}
-             <div className="absolute right-0 top-0 h-full w-1/3 opacity-30 mix-blend-overlay">
-                <svg viewBox="0 0 200 200" className="h-full w-full" preserveAspectRatio="none" fill="currentColor">
-                     <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z" transform="scale(1.5) translate(-20, 0)"/>
-                </svg>
-            </div>
-        </div>
-
-        {/* Navigation Cards */}
-        {activeTab === 'profile' && (
-            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-                <button 
-                    onClick={() => setActiveTab('product_history')}
-                    className="flex items-center justify-center gap-4 rounded-[20px] bg-white p-6 shadow-md transition hover:shadow-lg"
-                >
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#4aa731]/10">
-                        <svg className="h-8 w-8 text-[#4aa731]" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M16 6V4a4 4 0 00-8 0v2H5a1 1 0 00-1 1v12a3 3 0 003 3h10a3 3 0 003-3V7a1 1 0 00-1-1h-3zm-6-2a2 2 0 012 2v2h-4V4a2 2 0 012-2zm8 14a1 1 0 01-1 1H7a1 1 0 01-1-1V8h12v10z"/>
-=======
             <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
                 {/* Banner */}
                 <div className="relative mb-8 overflow-hidden rounded-[30px] bg-gradient-to-r from-[#4aa731] to-[#65ce4d] px-8 py-10 text-white shadow-lg md:px-12 md:py-14">
@@ -275,7 +157,6 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                     <div className="absolute right-0 top-0 h-full w-1/3 opacity-30 mix-blend-overlay">
                         <svg viewBox="0 0 200 200" className="h-full w-full" preserveAspectRatio="none" fill="currentColor">
                             <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z" transform="scale(1.5) translate(-20, 0)" />
->>>>>>> origin/mische-frontend
                         </svg>
                     </div>
                 </div>
@@ -585,90 +466,7 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                     )}
                 </div>
 
-<<<<<<< HEAD
-            {activeTab === 'reservation_history' && (
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[800px] border-collapse text-center">
-                        <thead>
-                            <tr className="text-lg font-bold text-black">
-                                <th className="p-4">Kode</th>
-                                <th className="p-4">Tanggal</th>
-                                <th className="p-4">Jam</th>
-                                <th className="p-4">Jenis Treatment</th>
-                                <th className="p-4">Status</th>
-                                <th className="p-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-base font-medium text-black">
-                            {isReservationsLoading ? (
-                                <tr>
-                                    <td colSpan="6" className="py-8 text-center text-gray-500">Memuat riwayat reservasi...</td>
-                                </tr>
-                            ) : reservations.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="py-8 text-center text-gray-500">Belum ada riwayat reservasi.</td>
-                                </tr>
-                            ) : (
-                                reservations.map((item, index) => {
-                                    // Helper for formatting status style
-                                    const getStatusColor = (status) => {
-                                        const s = status?.toLowerCase() || ''
-                                        if (s.includes('selesai') || s.includes('terkonfirmasi')) return 'bg-[#53c41a]'
-                                        if (s.includes('belum') || s.includes('proses')) return 'bg-[#b69036]'
-                                        if (s.includes('batal')) return 'bg-red-500'
-                                        return 'bg-gray-400'
-                                    }
-                                    
-                                    // Helper for date formatting
-                                    const formatDate = (dateString) => {
-                                        if (!dateString) return '-'
-                                        return new Date(dateString).toLocaleDateString('id-ID', {
-                                            day: 'numeric', month: 'long', year: 'numeric'
-                                        })
-                                    }
-
-                                    return (
-                                        <tr key={item.idReservasi || item.id || index} className="hover:bg-gray-50">
-                                            {/* Code: fallback to simple ID if no code */}
-                                            <td className="p-4">{item.kodeReservasi || `#${item.idReservasi || item.id}`}</td>
-                                            
-                                            {/* Date */}
-                                            <td className="p-4">{formatDate(item.tanggalReservasi || item.tanggal)}</td>
-                                            
-                                            {/* Time */}
-                                            <td className="p-4">{item.jamMulai ? `${item.jamMulai} - ${item.jamSelesai}` : '-'}</td>
-                                            
-                                            {/* Treatment: Check if treatment is object or string */}
-                                            <td className="p-4">
-                                                {item.treatment?.namaTreatment || item.treatment?.nama || item.jenisTreatment || '-'}
-                                            </td>
-                                            
-                                            {/* Status */}
-                                            <td className="p-4">
-                                                <div className="flex justify-center">
-                                                    <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} max-w-[200px] leading-tight`}>
-                                                        {item.status || 'Pending'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            
-                                            {/* Action */}
-                                            <td className="p-4">
-                                                <div className="flex justify-center">
-                                                    <button className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]">
-                                                        Ubah Jadwal
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-                            )}
-                        </tbody>
-                    </table>
-=======
             </main>
->>>>>>> origin/mische-frontend
 
             <Footer />
         </div>
