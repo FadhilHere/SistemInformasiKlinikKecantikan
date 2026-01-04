@@ -5,7 +5,6 @@ import DatePicker, { registerLocale } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
-import { apiFetch } from '../lib/api'
 
 registerLocale('id', id)
 
@@ -94,90 +93,13 @@ const ReservationPage = ({ isLoggedIn }) => {
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [showModal, setShowModal] = useState(false)
 
-<<<<<<< HEAD
-  const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
-  // selectedDoctor is initialized via the state block below
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  
-  // Doctor options state
-  const [doctorOptions, setDoctorOptions] = useState([{ value: 'loading', label: 'Memuat data...' }])
-  const [selectedDoctor, setSelectedDoctor] = useState('') // Start empty to force selection update upon load
-  
-  // Schedules state fetched from backend
-  const [schedules, setSchedules] = useState([])
-  const [loadingSchedule, setLoadingSchedule] = useState(true)
-=======
     const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
     const [selectedDoctor, setSelectedDoctor] = useState('dr. Widya')
     const [selectedDate, setSelectedDate] = useState(new Date())
->>>>>>> origin/mische-frontend
 
     const currentDayName = format(selectedDate, 'EEEE', { locale: id })
     const formattedDate = format(selectedDate, 'd MMMM yyyy', { locale: id })
 
-<<<<<<< HEAD
-  // ... (keep useEffect as is, but logic inside changed slightly in next step)
-
-  useEffect(() => {
-    const initData = async () => {
-        setLoadingSchedule(true)
-        
-        // 1. Fetch Schedules
-        try {
-            const scheduleRes = await apiFetch('/api/jadwal-reservasi')
-            if (scheduleRes.success && Array.isArray(scheduleRes.data)) {
-                const mapped = scheduleRes.data.map(item => ({
-                    id: item.id || item.idJadwal,
-                    time: item.jamMulai?.substring(0, 5),
-                    endTime: item.jamSelesai?.substring(0, 5),
-                    status: 'available'
-                }))
-                mapped.sort((a, b) => a.time.localeCompare(b.time))
-                setSchedules(mapped)
-            } else {
-                setSchedules([])
-            }
-        } catch (scheduleError) {
-            console.error("Error fetching schedules:", scheduleError)
-            // Keep schedules empty or show error toast
-        } finally {
-            setLoadingSchedule(false)
-        }
-
-        // 2. Fetch Doctors
-        try {
-            const doctorRes = await apiFetch('/api/profil-dokter')
-            if (doctorRes.success && Array.isArray(doctorRes.data) && doctorRes.data.length > 0) {
-                const options = doctorRes.data.map(d => ({ 
-                    value: d.nama, 
-                    label: d.nama 
-                }))
-                setDoctorOptions(options)
-                
-                // Auto-select first doctor
-                if (options.length > 0) {
-                    setSelectedDoctor(options[0].value)
-                }
-            } else {
-                 setDoctorOptions([{ value: '-', label: 'Tidak ada dokter' }])
-                 // Don't auto-select '-' if you want to force choice, or do:
-                 setSelectedDoctor('-')
-            }
-        } catch (doctorError) {
-            console.error("Error fetching doctors:", doctorError)
-            const errorMsg = doctorError.message || 'Gagal memuat'
-            setDoctorOptions([{ value: 'error', label: `Error: ${errorMsg}` }])
-        }
-    }
-    initData()
-  }, [])
-
-  const treatments = [
-    { value: 'Acne Treatment', label: 'Acne Treatment' },
-    { value: 'Whitening Treatment', label: 'Whitening Treatment' },
-    { value: 'Anti Aging', label: 'Anti Aging' }
-  ]
-=======
     const treatments = [
         { value: 'Acne Treatment', label: 'Acne Treatment' },
         { value: 'Whitening Treatment', label: 'Whitening Treatment' },
@@ -189,7 +111,6 @@ const ReservationPage = ({ isLoggedIn }) => {
         { value: 'dr. Budi', label: 'dr. Budi' },
         { value: '-', label: '-' }
     ]
->>>>>>> origin/mische-frontend
 
     const schedules = [
         { time: '07:00', status: 'available' },
@@ -206,12 +127,8 @@ const ReservationPage = ({ isLoggedIn }) => {
         { time: '18:00', status: 'available' },
     ]
 
-<<<<<<< HEAD
-  const isDoctorAvailable = selectedDoctor && selectedDoctor !== '-'
-=======
     const availableCount = schedules.filter(s => s.status === 'available').length
     const bookedCount = schedules.filter(s => s.status === 'booked').length
->>>>>>> origin/mische-frontend
 
     const isDoctorAvailable = selectedDoctor !== '-'
 
@@ -253,23 +170,6 @@ const ReservationPage = ({ isLoggedIn }) => {
                             </div>
                         </div>
 
-<<<<<<< HEAD
-                {/* Filters Row 1: Treatment & Doctor */}
-                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <CustomSelect 
-                    label="Jenis Treatment" 
-                    value={selectedTreatment} 
-                    options={treatments} 
-                    onChange={setSelectedTreatment} 
-                />
-                <CustomSelect 
-                    label="Dokter Yang Menghandle" 
-                    value={selectedDoctor} 
-                    options={doctorOptions} 
-                    onChange={setSelectedDoctor} 
-                />
-                </div>
-=======
                         {/* Filters Row 1: Treatment & Doctor */}
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                             <CustomSelect
@@ -285,7 +185,6 @@ const ReservationPage = ({ isLoggedIn }) => {
                                 onChange={setSelectedDoctor}
                             />
                         </div>
->>>>>>> origin/mische-frontend
 
                         {/* Filters Row 2: Date & Stats */}
                         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -319,31 +218,6 @@ const ReservationPage = ({ isLoggedIn }) => {
                             </div>
                         </div>
 
-<<<<<<< HEAD
-                {/* Main Content Area */}
-                <div className="min-h-[400px] rounded-[40px] bg-white p-8 shadow-xl">
-                    {loadingSchedule ? (
-                        <div className="flex justify-center py-20 text-gray-500">Memuat jadwal...</div>
-                    ) : isDoctorAvailable ? (
-                        schedules.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-                                {schedules.map((slot, index) => (
-                                    <div 
-                                        key={index}
-                                        onClick={() => handleSlotClick(slot)}
-                                        className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition ${
-                                            slot.status === 'available' 
-                                            ? 'bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer' 
-                                            : 'bg-white text-gray-400 border border-gray-200'
-                                        }`}
-                                    >
-                                        <span className="text-xl font-bold">{slot.time} WIB</span>
-                                        <div className={`mt-2 rounded-full px-4 py-1 text-xs font-bold ${
-                                            slot.status === 'available' ? 'bg-white text-[#4aa731]' : 'bg-gray-300 text-white'
-                                        }`}>
-                                            {slot.status === 'available' ? 'Kosong' : 'Sudah Terisi'}
-                                        </div>
-=======
                         {/* Main Content Area */}
                         <div className="min-h-[400px] rounded-[40px] bg-white p-8 shadow-xl">
                             {isDoctorAvailable ? (
@@ -400,49 +274,8 @@ const ReservationPage = ({ isLoggedIn }) => {
                                     <label className="text-lg font-medium text-black">Jam Mulai Treatment</label>
                                     <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
                                         {selectedSlot?.time} WIB
->>>>>>> origin/mische-frontend
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex h-full flex-col items-center justify-center py-20">
-                                <div className="mb-6 rounded-full border-4 border-gray-300 p-4">
-                                     <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
                                 </div>
-<<<<<<< HEAD
-                                <h2 className="text-xl font-bold text-gray-500">Jadwal reservasi tidak tersedia</h2>
-                            </div>
-                        )
-                    ) : (
-                        <div className="flex h-full flex-col items-center justify-center py-20">
-                            <div className="mb-6 rounded-full border-4 border-[#4aa731] p-4">
-                                <span className="text-6xl font-bold text-[#4aa731]">!</span>
-                            </div>
-                            <h2 className="text-2xl font-bold text-black">Maaf Dokter Tidak Tersedia Hari Ini</h2>
-                        </div>
-                    )}
-                </div>
-            </>
-        ) : (
-            <>
-                {/* Banner Detail */}
-                <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#4aa731] to-[#65ce4d] p-8 text-white shadow-lg md:p-12">
-                <div className="relative z-10 max-w-2xl">
-                    <h1 className="text-3xl font-bold leading-tight md:text-4xl">
-                    Ayo Pilih Jenis <br /> Treatment Kamu!
-                    </h1>
-                </div>
-                {/* Decorative Silhouette */}
-                <div className="absolute right-0 top-0 h-full w-1/3 opacity-20">
-                    <svg viewBox="0 0 200 200" className="h-full w-full" fill="currentColor">
-                        <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/>
-                    </svg>
-                </div>
-                </div>
-=======
->>>>>>> origin/mische-frontend
 
                                 {/* Jam Selesai */}
                                 <div className="flex flex-col gap-3">
@@ -491,21 +324,11 @@ const ReservationPage = ({ isLoggedIn }) => {
                 )}
             </main>
 
-<<<<<<< HEAD
-                        {/* Jam Selesai */}
-                        <div className="flex flex-col gap-3">
-                            <label className="text-lg font-medium text-black">Jam Selesai Treatment</label>
-                            <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                {selectedSlot?.endTime || '-'} WIB
-                            </div>
-                        </div>
-=======
             <ConfirmationModal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 onConfirm={handleConfirmReservation}
             />
->>>>>>> origin/mische-frontend
 
             <Footer />
         </div>
