@@ -76,7 +76,7 @@ const PromoPage = ({ isLoggedIn }) => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short', year: 'numeric'
+      day: 'numeric', month: 'short', year: 'numeric'
     })
   }
 
@@ -93,14 +93,14 @@ const PromoPage = ({ isLoggedIn }) => {
     // If status is 1 and today <= tanggalSelesai -> active
     // Else expired
     const isActive = promo.status && new Date(promo.tanggalSelesai) >= new Date();
-    
+
     return {
-        id: promo.id || promo.idPromo,
-        title: promo.namaPromo,
-        description: promo.deskripsi,
-        status: isActive ? 'active' : 'expired',
-        expiresOn: formatDate(promo.tanggalSelesai),
-        image: getImageUrl(promo.gambar)
+      id: promo.id || promo.idPromo,
+      title: promo.namaPromo,
+      description: promo.deskripsi,
+      status: isActive ? 'active' : 'expired',
+      expiresOn: formatDate(promo.tanggalSelesai),
+      image: getImageUrl(promo.gambar)
     }
   }
 
@@ -126,26 +126,26 @@ const PromoPage = ({ isLoggedIn }) => {
         </div>
 
         {isLoading ? (
-            <div className="text-center py-20">Memuat promo...</div>
+          <div className="text-center py-20">Memuat promo...</div>
         ) : error ? (
-            <div className="text-center py-20 text-red-500">{error}</div>
+          <div className="text-center py-20 text-red-500">{error}</div>
         ) : (
-            <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {filteredPromos.map((promo) => (
-                <Link
+              <Link
                 key={promo.id || promo.idPromo}
                 to={`/promo/${promo.id || promo.idPromo}`}
                 className="text-left"
-                >
+              >
                 <PromoCard {...mapPromoToCard(promo)} />
-                </Link>
+              </Link>
             ))}
             {filteredPromos.length === 0 && (
-                <div className="col-span-full rounded-3xl bg-white p-10 text-center text-brand/70 shadow-card">
+              <div className="col-span-full rounded-3xl bg-white p-10 text-center text-brand/70 shadow-card">
                 Promo tidak ditemukan. Coba kata kunci lain.
-                </div>
+              </div>
             )}
-            </section>
+          </section>
         )}
       </main>
       <Footer />

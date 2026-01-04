@@ -68,31 +68,31 @@ const ResultsShowcase = () => {
       </div>
 
       <div className="mt-12 overflow-hidden">
-        <div 
-            ref={scrollRef}
-            className="flex gap-8 overflow-x-auto px-8 pb-8 pt-4 cursor-grab active:cursor-grabbing"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              scrollSnapType: isDragging ? 'none' : 'x mandatory' // Disable snap while dragging for smoothness
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={handleMouseUp}
-            onMouseMove={handleMouseMove}
+        <div
+          ref={scrollRef}
+          className="flex gap-8 overflow-x-auto px-8 pb-8 pt-4 cursor-grab active:cursor-grabbing"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            scrollSnapType: isDragging ? 'none' : 'x mandatory' // Disable snap while dragging for smoothness
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
         >
-            <style>
-              {`
+          <style>
+            {`
                 .scrollbar-hide::-webkit-scrollbar {
                     display: none;
                 }
               `}
-            </style>
-            {RESULTS.map((result) => (
+          </style>
+          {RESULTS.map((result) => (
             <div key={result.title} className="min-w-[300px] flex-shrink-0 snap-center md:min-w-[400px] select-none">
-                <ResultCard {...result} />
+              <ResultCard {...result} />
             </div>
-            ))}
+          ))}
         </div>
       </div>
 

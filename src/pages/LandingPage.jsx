@@ -16,7 +16,6 @@ const LandingPage = ({ isLoggedIn }) => {
   return (
     <div className="min-h-screen bg-background relative">
       <Navbar isLoggedIn={isLoggedIn} />
-      
       <HeroSection />
 
       <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 py-12">
@@ -40,7 +39,7 @@ const LandingPage = ({ isLoggedIn }) => {
       {/* Floating Buttons */}
       {/* Floating Buttons */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3">
-        <button 
+        <button
           onClick={scrollToTop}
           className="flex h-10 w-10 items-center justify-center border-2 border-[#4aa731] bg-white text-[#4aa731] shadow-lg transition hover:bg-gray-50"
         >
@@ -48,9 +47,9 @@ const LandingPage = ({ isLoggedIn }) => {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
           </svg>
         </button>
-        <a 
-          href="https://wa.me/628116922551" 
-          target="_blank" 
+        <a
+          href="https://wa.me/628116922551"
+          target="_blank"
           rel="noreferrer"
           className="flex items-center gap-2 bg-[#4aa731] px-5 py-2.5 text-white shadow-lg transition hover:bg-[#3d8b29]"
         >

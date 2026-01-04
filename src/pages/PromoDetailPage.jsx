@@ -81,7 +81,7 @@ const PromoDetailPage = ({ isLoggedIn }) => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     return new Date(dateString).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short', year: 'numeric'
+      day: 'numeric', month: 'short', year: 'numeric'
     })
   }
 
@@ -92,12 +92,12 @@ const PromoDetailPage = ({ isLoggedIn }) => {
   }
 
   if (isLoading) {
-      return (
-        <div className="min-h-screen bg-background">
-          <Navbar isLoggedIn={isLoggedIn} />
-          <div className="flex justify-center py-20">Memuat...</div>
-        </div>
-      )
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn={isLoggedIn} />
+        <div className="flex justify-center py-20">Memuat...</div>
+      </div>
+    )
   }
 
   if (error || !promo) {
@@ -165,10 +165,10 @@ const PromoDetailPage = ({ isLoggedIn }) => {
                 </p>
               </div>
             </div>
-            <Button 
-                variant="primary" 
-                className="mt-6 w-full"
-                onClick={() => navigate('/products')}
+            <Button
+              variant="primary"
+              className="mt-6 w-full"
+              onClick={() => navigate('/products')}
             >
               Lihat Semua Produk
             </Button>

@@ -77,7 +77,6 @@ const TreatmentsSection = () => {
             Mendapatkan Hasil Maksimal.
           </p>
         </div>
-        
         {/* Decorative Curve Overlay */}
         <div className="absolute bottom-0 right-0 h-64 w-64 translate-x-1/4 translate-y-1/4 rounded-full bg-white/10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-1/4 translate-y-1/4 rounded-full bg-white/10 blur-2xl"></div>
@@ -86,19 +85,19 @@ const TreatmentsSection = () => {
       {/* Right Carousel */}
       <div className="relative w-full lg:w-[65%] flex items-center bg-white py-12 lg:py-0">
         <div className="relative w-full overflow-hidden px-8">
-            <div 
-                ref={scrollRef}
-                className="flex gap-8 overflow-x-auto pb-8 pt-4 cursor-grab active:cursor-grabbing"
-                style={{ 
-                  scrollbarWidth: 'none', 
-                  msOverflowStyle: 'none',
-                  scrollSnapType: isDragging ? 'none' : 'x mandatory'
-                }}
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-            >
+          <div
+            ref={scrollRef}
+            className="flex gap-8 overflow-x-auto pb-8 pt-4 cursor-grab active:cursor-grabbing"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollSnapType: isDragging ? 'none' : 'x mandatory'
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
             <style>
               {`
                 .scrollbar-hide::-webkit-scrollbar {
@@ -107,11 +106,11 @@ const TreatmentsSection = () => {
               `}
             </style>
             {TREATMENTS.map((treatment) => (
-                <div key={treatment.name} className="min-w-[300px] flex-shrink-0 snap-center select-none">
+              <div key={treatment.name} className="min-w-[300px] flex-shrink-0 snap-center select-none">
                 <TreatmentCard {...treatment} />
-                </div>
+              </div>
             ))}
-            </div>
+          </div>
         </div>
       </div>
     </section>

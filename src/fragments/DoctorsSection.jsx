@@ -29,6 +29,8 @@ const DoctorsSection = () => {
   const getImageUrl = (path) => {
     if (!path) return 'https://via.placeholder.com/600x600?text=No+Image'
     if (path.startsWith('http')) return path
+    // handle path with leading /storage or without
+    if (path.startsWith('/storage')) return `${API_BASE_URL}${path}`
     return `${API_BASE_URL}/storage/${path}`
   }
 

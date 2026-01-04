@@ -37,14 +37,14 @@ const ProductsPage = ({ isLoggedIn }) => {
 
   const filteredProducts = useMemo(() => {
     if (category === 'Semua Produk') return products
-    
+
     return products.filter((product) => {
-        // Assuming backend returns category object or we filter by category name
-        // If the backend 'kategori' relation has a name, use it.
-        // Fallback: if 'kategori' is just an ID, this might break without mapping.
-        // For now, let's try to match loosely if the backend provides category data.
-        const productCategory = product.kategori?.namaKategori || product.kategori?.nama || ''
-        return productCategory.toLowerCase().includes(category.toLowerCase())
+      // Assuming backend returns category object or we filter by category name
+      // If the backend 'kategori' relation has a name, use it.
+      // Fallback: if 'kategori' is just an ID, this might break without mapping.
+      // For now, let's try to match loosely if the backend provides category data.
+      const productCategory = product.kategori?.namaKategori || product.kategori?.nama || ''
+      return productCategory.toLowerCase().includes(category.toLowerCase())
     })
   }, [category, products])
 
@@ -116,13 +116,13 @@ const ProductsPage = ({ isLoggedIn }) => {
             <p className="text-gray-500">Memuat produk...</p>
           </div>
         ) : error ? (
-            <div className="py-20 text-center">
-                <p className="text-red-500">{error}</p>
-            </div>
+          <div className="py-20 text-center">
+            <p className="text-red-500">{error}</p>
+          </div>
         ) : filteredProducts.length === 0 ? (
-            <div className="py-20 text-center">
-                <p className="text-gray-500">Belum ada produk untuk kategori ini.</p>
-            </div>
+          <div className="py-20 text-center">
+            <p className="text-gray-500">Belum ada produk untuk kategori ini.</p>
+          </div>
         ) : (
           <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => (
@@ -143,10 +143,10 @@ const ProductsPage = ({ isLoggedIn }) => {
                 </h3>
                 <p className="mb-4 text-brand/70 line-clamp-2 text-sm mt-1">{product.deskripsi}</p>
                 <div className="mt-auto">
-                    <p className="text-lg font-bold text-brand">{formatPrice(product.harga)}</p>
-                    <p className={`text-xs ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {product.stock > 0 ? `Stok: ${product.stock}` : 'Stok Habis'}
-                    </p>
+                  <p className="text-lg font-bold text-brand">{formatPrice(product.harga)}</p>
+                  <p className={`text-xs ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {product.stock > 0 ? `Stok: ${product.stock}` : 'Stok Habis'}
+                  </p>
                 </div>
               </article>
             ))}

@@ -9,8 +9,8 @@ export const hashString = async (message) => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
-  };
-  
+};
+
 // Mock Credentials (hashed)
 // Email: as22si@mahsiswa.pcr.ac.id
 // Password: acop123
@@ -30,8 +30,8 @@ const STORED_HASHES = {
  * @returns {Promise<boolean>}
  */
 export const verifyLogin = async (email, password) => {
-   const emailHash = await hashString(email);
-   const passwordHash = await hashString(password);
-   
-   return emailHash === STORED_HASHES.email && passwordHash === STORED_HASHES.password;
+    const emailHash = await hashString(email);
+    const passwordHash = await hashString(password);
+
+    return emailHash === STORED_HASHES.email && passwordHash === STORED_HASHES.password;
 }

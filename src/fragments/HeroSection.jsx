@@ -96,12 +96,12 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden shadow-card group">
-      <div 
+      <div
         className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {extendedSlides.map((slide, index) => (
-          <div 
+          <div
             key={`${slide.uniqueId}-${index}`}
             className={`min-w-full bg-gradient-to-r ${slide.bgGradient} py-12 text-white`}
           >
@@ -116,10 +116,10 @@ const HeroSection = () => {
                 <p className="w-fit rounded-full bg-white/20 px-5 py-3 text-sm font-medium tracking-wide backdrop-blur-sm">
                   {slide.subtitle}
                 </p>
-                <Button 
-                    variant="light" 
-                    className="mt-4 w-fit px-10 py-3 text-primary font-bold"
-                    onClick={() => navigate('/reservation')}
+                <Button
+                  variant="light"
+                  className="mt-4 w-fit px-10 py-3 text-primary font-bold"
+                  onClick={() => navigate('/reservation')}
                 >
                   Reservasi Sekarang
                 </Button>
@@ -127,7 +127,7 @@ const HeroSection = () => {
 
               <div className="relative mt-10 flex justify-center lg:mt-0">
                 <div className="relative z-10 h-[360px] w-[320px] overflow-hidden rounded-[48px] shadow-2xl">
-                   <img
+                  <img
                     src={slide.image}
                     alt={slide.title}
                     className="h-full w-full object-cover"
@@ -141,7 +141,7 @@ const HeroSection = () => {
       </div>
 
       {/* Navigation Arrows */}
-      <button 
+      <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/40 lg:left-8 opacity-0 group-hover:opacity-100"
       >
@@ -149,7 +149,7 @@ const HeroSection = () => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
       </button>
-      <button 
+      <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/40 lg:right-8 opacity-0 group-hover:opacity-100"
       >
@@ -168,9 +168,8 @@ const HeroSection = () => {
               setCurrentIndex(index + 1)
               startAutoplay()
             }}
-            className={`h-1.5 rounded-full transition-all ${
-              getActiveDotIndex() === index ? 'w-12 bg-white' : 'w-6 bg-white/50'
-            }`}
+            className={`h-1.5 rounded-full transition-all ${getActiveDotIndex() === index ? 'w-12 bg-white' : 'w-6 bg-white/50'
+              }`}
           />
         ))}
       </div>
