@@ -11,6 +11,7 @@ const DoctorTable = () => {
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchDoctors = async () => {
         try {
@@ -59,12 +60,11 @@ const DoctorTable = () => {
         try {
             const formData = buildFormData(updatedDoctor);
             formData.append('_method', 'PUT');
-            await apiFetch(`/api/profil-dokter/${selectedDoctor.id || selectedDoctor.idDokter}`, {
+            await apiFetch(`/api/profil-dokter/${selectedDoctor.idDokter || selectedDoctor.id}`, {
                 method: 'POST',
                 body: formData,
             });
-            setIsEditModalOpen(false);
-            setSelectedDoctor(null);
+            closeEditModal();
             await fetchDoctors();
         } catch (err) {
             setError(err?.data?.message || 'Gagal memperbarui dokter');
@@ -88,11 +88,27 @@ const DoctorTable = () => {
     const openEditModal = (doctor) => {
         setSelectedDoctor(doctor);
         setIsEditModalOpen(true);
+        // Update URL to show doctor ID
+        window.history.pushState({}, '', `/doctor/${doctor.idDokter || doctor.id}`);
     };
 
     const openDeleteModal = (doctor) => {
         setSelectedDoctor(doctor);
         setIsDeleteModalOpen(true);
+        window.history.pushState({}, '', `/api/profil-dokter/${doctor.idDokter || doctor.id}`);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setSelectedDoctor(null);
+        window.history.pushState({}, '', '/doctor');
+    };
+
+    const closeEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedDoctor(null);
+        // Restore URL to doctors page
+        window.history.pushState({}, '', '/doctor');
     };
 
     const getStatusBadgeClass = (status) => {
@@ -114,10 +130,45 @@ const DoctorTable = () => {
         return `${API_BASE_URL}/storage/${path}`;
     };
 
+    // Filter doctors based on search query
+    const filteredDoctors = doctors.filter((doctor) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        const nama = (doctor.nama || doctor.name || '').toLowerCase();
+        const email = (doctor.email || '').toLowerCase();
+        const deskripsi = (doctor.deskripsi || doctor.description || '').toLowerCase();
+        return nama.includes(query) || email.includes(query) || deskripsi.includes(query);
+    });
+
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <div className="p-4 flex items-center border-b border-gray-100">
                 <div className="flex gap-2 ml-auto">
+                    {/* Search Input */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Cari dokter..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        />
+                        <svg
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </div>
+                    {/* Add Button */}
                     <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="bg-primary hover:bg-primary-dark text-white p-2 rounded-md transition-colors"
@@ -148,7 +199,7 @@ const DoctorTable = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {doctors.map((doctor, index) => (
+                            {filteredDoctors.map((doctor, index) => (
                                 <tr key={doctor.id || doctor.idDokter} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                     <td className="py-4 px-6 text-gray-400">{index + 1}</td>
                                     <td className="py-4 px-6 font-medium text-gray-900">{doctor.nama || doctor.name}</td>
@@ -192,6 +243,27 @@ const DoctorTable = () => {
                     </table>
                 </div>
             )}
+            {/* Pagination */}
+            <div className="flex items-center justify-between p-4 border-t border-gray-100">
+                <button className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                </button>
+
+                <div className="flex gap-2">
+                    <button className="w-8 h-8 rounded-lg bg-green-100 text-green-600 font-medium flex items-center justify-center text-sm">1</button>
+                </div>
+
+                <button className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm">
+                    Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
 
             {/* Modals */}
             <DoctorModal
@@ -203,7 +275,7 @@ const DoctorTable = () => {
 
             <DoctorModal
                 isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                onClose={closeEditModal}
                 mode="edit"
                 initialData={selectedDoctor}
                 onSubmit={handleEdit}
@@ -211,7 +283,7 @@ const DoctorTable = () => {
 
             <DeleteModal
                 isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
+                onClose={closeDeleteModal}
                 onConfirm={handleDelete}
                 itemType="doctor"
             />

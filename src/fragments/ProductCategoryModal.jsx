@@ -3,18 +3,21 @@ import Button from '../components/atoms/Button';
 
 const ProductCategoryModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        categoryName: '',
-        categoryDescription: ''
+        nama: '',
+        deskripsi: ''
     });
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    nama: initialData.nama || '',
+                    deskripsi: initialData.deskripsi || ''
+                });
             } else {
                 setFormData({
-                    categoryName: '',
-                    categoryDescription: ''
+                    nama: '',
+                    deskripsi: ''
                 });
             }
         }
@@ -34,11 +37,11 @@ const ProductCategoryModal = ({ isOpen, onClose, mode = 'add', initialData, onSu
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden m-4">
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900">
-                        {mode === 'add' ? 'Tambah Kategori Produk' : 'Tambah Kategori Produk'}
+                        {mode === 'add' ? 'Tambah Kategori Produk' : 'Edit Kategori Produk'}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -50,29 +53,29 @@ const ProductCategoryModal = ({ isOpen, onClose, mode = 'add', initialData, onSu
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Nama Kategori</label>
-                            <input
-                                type="text"
-                                name="categoryName"
-                                value={formData.categoryName}
-                                onChange={handleChange}
-                                placeholder="Nama Kategori"
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Deskripsi Kategori</label>
-                            <textarea
-                                name="categoryDescription"
-                                value={formData.categoryDescription}
-                                onChange={handleChange}
-                                placeholder="Deskripsi Kategori"
-                                rows="1"
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
-                            ></textarea>
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Nama Kategori</label>
+                        <input
+                            type="text"
+                            name="nama"
+                            value={formData.nama}
+                            onChange={handleChange}
+                            placeholder="Contoh: Skincare"
+                            required
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Deskripsi</label>
+                        <textarea
+                            name="deskripsi"
+                            value={formData.deskripsi}
+                            onChange={handleChange}
+                            placeholder="Deskripsi kategori produk"
+                            rows="4"
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
+                        />
                     </div>
 
                     <div className="flex justify-end pt-4">

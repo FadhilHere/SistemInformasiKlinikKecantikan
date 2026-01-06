@@ -1,54 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
 
-const SalesModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
-    const [formData, setFormData] = useState({
-        name: '',
-        date: '',
-        promo: '',
-        product: '',
-        quantity: '',
-        total_price: '',
-        status: ''
-    });
+const SalesModal = ({ isOpen, onClose, initialData, onSubmit }) => {
+    const [status, setStatus] = useState('');
 
     useEffect(() => {
-        if (isOpen) {
-            if (mode === 'edit' && initialData) {
-                setFormData(initialData);
-            } else {
-                setFormData({
-                    name: '',
-                    date: '',
-                    promo: '',
-                    product: '',
-                    quantity: '',
-                    total_price: '',
-                    status: ''
-                });
-            }
+        if (isOpen && initialData) {
+            setStatus(initialData.status || '');
+        } else {
+            setStatus('');
         }
-    }, [isOpen, mode, initialData]);
+    }, [isOpen, initialData]);
 
     if (!isOpen) return null;
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        onSubmit({ status });
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden m-4">
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900">
-                        {mode === 'add' ? 'Tambah Sales' : 'Edit Sales'}
+                        Update Status Penjualan
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,81 +35,36 @@ const SalesModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                     </button>
                 </div>
 
+                {/* Content Info */}
+                <div className="p-6 pb-0">
+                    <p className="text-sm text-gray-600 mb-2">
+                        <span className="font-semibold">ID Penjualan:</span> #{initialData?.idPenjualan || initialData?.id}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-4">
+                        <span className="font-semibold">Customer:</span> {initialData?.name || initialData?.namaCustomer || '-'}
+                    </p>
+                </div>
+
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Nama </label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Nama Event"
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Tanggal</label>
-                            <input
-                                type="date"
-                                name="date"
-                                value={formData.date}
-                                onChange={handleChange}
-                                placeholder="Tanggal Event"
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Promo</label>
-                        <textarea
-                            name="promo"
-                            value={formData.promo}
-                            onChange={handleChange}
-                            placeholder="Promo"
-                            rows="4"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
-                        ></textarea>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Jumlah</label>
-                        <textarea
-                            name="quantity"
-                            value={formData.quantity}
-                            onChange={handleChange}
-                            placeholder="Jumlah"
-                            rows="4"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
-                        ></textarea>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Total Harga</label>
-                        <textarea
-                            name="total_price"
-                            value={formData.total_price}
-                            onChange={handleChange}
-                            placeholder="Total Harga"
-                            rows="4"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
-                        ></textarea>
-                    </div>
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium text-gray-700">Status</label>
-                        <textarea
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            placeholder="Status"
-                            rows="4"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
-                        ></textarea>
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                        >
+                            <option value="">Pilih Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
                     </div>
 
                     <div className="flex justify-end pt-4">
-                        <Button type="submit" className="min-w-[150px]">
-                            {mode === 'add' ? 'Tambah Sales' : 'Simpan Perubahan'}
+                        <Button type="submit" className="w-full">
+                            Simpan Perubahan
                         </Button>
                     </div>
                 </form>

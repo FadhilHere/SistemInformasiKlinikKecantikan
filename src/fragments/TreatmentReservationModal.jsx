@@ -1,34 +1,89 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import { apiFetch } from '../lib/api';
 
 const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        customerName: '',
-        whatsapp: '',
-        treatmentType: '',
-        treatmentDate: '',
-        startTime: '',
-        endTime: '',
-        doctor: '',
-        reservationType: '',
-        status: 'Konfirmasi'
+        idUser: '',
+        nomorWa: '',
+        idDokter: '',
+        idJadwal: '',
+        jenisTreatment: '',
+        tanggalReservasi: '',
+        status: 'pending'
     });
+
+    const [customers, setCustomers] = useState([]);
+    const [doctors, setDoctors] = useState([]);
+    const [schedules, setSchedules] = useState([]);
+    const [isLoadingData, setIsLoadingData] = useState(false);
+
+    // Helper function to convert date to yyyy-MM-dd format
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    // Fetch dropdown data
+    useEffect(() => {
+        const fetchDropdownData = async () => {
+            if (!isOpen) return;
+
+            try {
+                setIsLoadingData(true);
+
+                // Fetch customers
+                const usersRes = await apiFetch('/api/users');
+                const usersList = usersRes?.data || usersRes || [];
+                setCustomers(Array.isArray(usersList) ? usersList : []);
+
+                // Fetch doctors
+                const doctorsRes = await apiFetch('/api/profil-dokter');
+                const doctorsList = doctorsRes?.data || doctorsRes || [];
+                setDoctors(Array.isArray(doctorsList) ? doctorsList : []);
+
+                // Fetch schedules from jadwal-reservasi
+                const schedulesRes = await apiFetch('/api/jadwal-reservasi');
+                const schedulesList = schedulesRes?.data || schedulesRes || [];
+                setSchedules(Array.isArray(schedulesList) ? schedulesList : []);
+
+            } catch (err) {
+                console.error('Failed to fetch dropdown data:', err);
+            } finally {
+                setIsLoadingData(false);
+            }
+        };
+
+        fetchDropdownData();
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    idUser: initialData.idUser || '',
+                    nomorWa: initialData.nomorWa || '',
+                    idDokter: initialData.idDokter || '',
+                    idJadwal: initialData.idJadwal || '',
+                    jenisTreatment: initialData.jenisTreatment || '',
+                    tanggalReservasi: formatDateForInput(initialData.tanggalReservasi),
+                    status: initialData.status || 'pending'
+                });
             } else {
                 setFormData({
-                    customerName: '',
-                    whatsapp: '',
-                    treatmentType: '',
-                    treatmentDate: '',
-                    startTime: '',
-                    endTime: '',
-                    doctor: '',
-                    reservationType: '',
-                    status: 'Konfirmasi'
+                    idUser: '',
+                    nomorWa: '',
+                    idDokter: '',
+                    idJadwal: '',
+                    jenisTreatment: '',
+                    tanggalReservasi: '',
+                    status: 'pending'
                 });
             }
         }
@@ -43,16 +98,27 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+
+        // Get customer name from selected idUser
+        const selectedCustomer = customers.find(c => String(c.idUser) === String(formData.idUser));
+        const namaCustomer = selectedCustomer ? selectedCustomer.nama : '';
+
+        // Include namaCustomer in submission
+        const submitData = {
+            ...formData,
+            namaCustomer
+        };
+
+        onSubmit(submitData);
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
                     <h2 className="text-xl font-bold text-gray-900">
-                        {mode === 'add' ? 'Tambah Customer Treatment' : 'Edit Customer Treatment'}
+                        {mode === 'add' ? 'Tambah Reservasi' : 'Edit Reservasi'}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,26 +132,73 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Nama Customer</label>
+                            <label className="text-sm font-medium text-gray-700">Customer</label>
+                            <select
+                                name="idUser"
+                                value={formData.idUser}
+                                onChange={handleChange}
+                                required
+                                disabled={isLoadingData}
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                            >
+                                <option value="">Pilih Customer</option>
+                                {customers.map(customer => (
+                                    <option key={customer.idUser} value={customer.idUser}>
+                                        {customer.nama}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
                             <input
                                 type="text"
-                                name="customerName"
-                                value={formData.customerName}
+                                name="nomorWa"
+                                value={formData.nomorWa}
                                 onChange={handleChange}
-                                placeholder="Nama user"
+                                placeholder="08123456789"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Nomor Whatsapp</label>
-                            <input
-                                type="text"
-                                name="whatsapp"
-                                value={formData.whatsapp}
+                            <label className="text-sm font-medium text-gray-700">Dokter</label>
+                            <select
+                                name="idDokter"
+                                value={formData.idDokter}
                                 onChange={handleChange}
-                                placeholder="Nomor Whatsapp"
+                                required
+                                disabled={isLoadingData}
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                            />
+                            >
+                                <option value="">Pilih Dokter</option>
+                                {doctors.map(doctor => (
+                                    <option key={doctor.idDokter} value={doctor.idDokter}>
+                                        {doctor.nama}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">Jadwal</label>
+                            <select
+                                name="idJadwal"
+                                value={formData.idJadwal}
+                                onChange={handleChange}
+                                required
+                                disabled={isLoadingData}
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                            >
+                                <option value="">Pilih Jadwal</option>
+                                {schedules.map(schedule => (
+                                    <option key={schedule.idJadwal} value={schedule.idJadwal}>
+                                        {schedule.jamMulai} - {schedule.jamSelesai}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
@@ -93,74 +206,52 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-700">Jenis Treatment</label>
                             <select
-                                name="treatmentType"
-                                value={formData.treatmentType}
+                                name="jenisTreatment"
+                                value={formData.jenisTreatment}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
+                                required
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             >
-                                <option value="">Pilih Jenis Kelamin</option>
-                                <option value="Facial Treatment">Facial Treatment</option>
-                                <option value="Body Treatment">Body Treatment</option>
+                                <option value="">Pilih Jenis Treatment</option>
                                 <option value="Hair Treatment">Hair Treatment</option>
+                                <option value="Body Treatment">Body Treatment</option>
+                                <option value="Perawatan Wajah">Perawatan Wajah</option>
                                 <option value="Skin Treatment">Skin Treatment</option>
+                                <option value="Facial Treatment">Facial Treatment</option>
                             </select>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Tanggal Treatment</label>
+                            <label className="text-sm font-medium text-gray-700">Tanggal Reservasi</label>
                             <input
                                 type="date"
-                                name="treatmentDate"
-                                value={formData.treatmentDate}
+                                name="tanggalReservasi"
+                                value={formData.tanggalReservasi}
                                 onChange={handleChange}
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Jam Mulai</label>
-                            <select
-                                name="startTime"
-                                value={formData.startTime}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
-                            >
-                                <option value="">Jam Mulai</option>
-                                <option value="08:00">08:00</option>
-                                <option value="09:00">09:00</option>
-                                <option value="10:00">10:00</option>
-                                <option value="11:00">11:00</option>
-                                <option value="13:00">13:00</option>
-                                <option value="14:00">14:00</option>
-                                <option value="15:00">15:00</option>
-                                <option value="16:00">16:00</option>
-                            </select>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Jam Selesai</label>
-                            <select
-                                name="endTime"
-                                value={formData.endTime}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
-                            >
-                                <option value="">Jam Selesai</option>
-                                <option value="09:00">09:00</option>
-                                <option value="10:00">10:00</option>
-                                <option value="11:00">11:00</option>
-                                <option value="12:00">12:00</option>
-                                <option value="14:00">14:00</option>
-                                <option value="15:00">15:00</option>
-                                <option value="16:00">16:00</option>
-                                <option value="17:00">17:00</option>
-                            </select>
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Status</label>
+                        <select
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="konfirmasi">Konfirmasi</option>
+                            <option value="datang">Datang</option>
+                            <option value="tidak datang">Tidak Datang</option>
+                        </select>
                     </div>
 
                     <div className="flex justify-end pt-4">
-                        <Button type="submit" className="min-w-[150px]">
-                            {mode === 'add' ? 'Tambah User' : 'Simpan Perubahan'}
+                        <Button type="submit" className="min-w-[150px]" disabled={isLoadingData}>
+                            {mode === 'add' ? 'Tambah Reservasi' : 'Simpan Perubahan'}
                         </Button>
                     </div>
                 </form>

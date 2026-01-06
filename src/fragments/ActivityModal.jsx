@@ -3,21 +3,38 @@ import Button from '../components/atoms/Button';
 
 const ActivityModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        photo: '',
-        name: '',
-        description: ''
+        namaKegiatan: '',
+        deskripsi: '',
+        tanggalKegiatan: '',
+        foto: null
     });
+    const [photoPreview, setPhotoPreview] = useState('');
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    namaKegiatan: initialData.namaKegiatan || '',
+                    deskripsi: initialData.deskripsi || '',
+                    // Format timestamp to YYYY-MM-DD for date input
+                    tanggalKegiatan: initialData.tanggalKegiatan ? initialData.tanggalKegiatan.substring(0, 10) : '',
+                    foto: null
+                });
+                // Set preview from existing photo
+                if (initialData.foto) {
+                    // Backend stores in storage/kegiatan/ using Laravel Storage
+                    setPhotoPreview(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/${initialData.foto}`);
+                } else {
+                    setPhotoPreview('');
+                }
             } else {
                 setFormData({
-                    photo: '',
-                    name: '',
-                    description: ''
+                    namaKegiatan: '',
+                    deskripsi: '',
+                    tanggalKegiatan: '',
+                    foto: null
                 });
+                setPhotoPreview('');
             }
         }
     }, [isOpen, mode, initialData]);
@@ -27,6 +44,19 @@ const ActivityModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit })
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setFormData(prev => ({ ...prev, foto: file }));
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -57,10 +87,10 @@ const ActivityModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit })
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {mode === 'edit' ? 'Ubah Gambar Kegiatan' : 'Unggah Gambar Kegiatan'}
                         </label>
-                        {mode === 'edit' && formData.photo && (
+                        {photoPreview && (
                             <div className="mb-4 p-4 border border-gray-200 rounded-lg">
                                 <p className="text-sm text-gray-600 mb-2">Foto Kegiatan</p>
-                                <img src={formData.photo} alt="Activity" className="w-full h-48 object-cover rounded-lg" />
+                                <img src={photoPreview} alt="Activity" className="w-full h-48 object-cover rounded-lg" />
                             </div>
                         )}
                         <p className="text-sm text-gray-500 mb-3">
@@ -72,16 +102,7 @@ const ActivityModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit })
                                 accept="image/*"
                                 className="hidden"
                                 id="activity-photo"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            setFormData(prev => ({ ...prev, photo: reader.result }));
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
+                                onChange={handleFileChange}
                             />
                             <label
                                 htmlFor="activity-photo"
@@ -90,32 +111,46 @@ const ActivityModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit })
                                 Choose File
                             </label>
                             <span className="text-sm text-gray-500">
-                                {formData.photo ? 'File Selected' : 'No File Choosen'}
+                                {formData.foto ? formData.foto.name : (photoPreview ? 'File Selected' : 'No File Choosen')}
                             </span>
                         </div>
                     </div>
 
-                    {/* Name and Description */}
+                    {/* Name */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Nama Kegiatan</label>
                         <input
                             type="text"
-                            name="name"
-                            value={formData.name}
+                            name="namaKegiatan"
+                            value={formData.namaKegiatan}
                             onChange={handleChange}
                             placeholder="Nama Kegiatan"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
                     </div>
 
+                    {/* Description */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi Kegiatan</label>
                         <input
                             type="text"
-                            name="description"
-                            value={formData.description}
+                            name="deskripsi"
+                            value={formData.deskripsi}
                             onChange={handleChange}
                             placeholder="Deskripsi Kegiatan"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                        />
+                    </div>
+
+                    {/* Date */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Kegiatan</label>
+                        <input
+                            type="date"
+                            name="tanggalKegiatan"
+                            value={formData.tanggalKegiatan}
+                            onChange={handleChange}
+                            required
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
                     </div>

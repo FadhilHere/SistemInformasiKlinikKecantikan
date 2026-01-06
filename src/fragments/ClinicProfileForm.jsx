@@ -1,37 +1,161 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import { apiFetch } from '../lib/api';
 
 const ClinicProfileForm = () => {
     const [formData, setFormData] = useState({
-        description: 'Klinik kecantikan terpercaya dengan layanan profesional dan berkualitas tinggi.',
-        vision: 'Menjadi klinik kecantikan terbaik di Indonesia',
-        mission: 'Memberikan layanan kecantikan berkualitas dengan harga terjangkau',
-        openingHours: '08:00',
-        closingHours: '17:00',
-        photo: ''
+        visi: '',
+        misi: '',
+        deskripsiPerusahaan: '',
+        nomorCustomerService: '',
+        jamBuka: '',
+        jamKeluar: '',
+        fotoFile: null
     });
+    const [photoPreview, setPhotoPreview] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [profileId, setProfileId] = useState(null);
+
+    const fetchProfile = async () => {
+        try {
+            setIsLoading(true);
+            setError('');
+            const res = await apiFetch('/api/profil-perusahaan');
+            const data = res?.data || res || [];
+
+            // Ambil profil pertama jika ada
+            if (Array.isArray(data) && data.length > 0) {
+                const profile = data[0];
+                setProfileId(profile.idProfil);
+                setFormData({
+                    visi: profile.visi || '',
+                    misi: profile.misi || '',
+                    deskripsiPerusahaan: profile.deskripsiPerusahaan || '',
+                    nomorCustomerService: profile.nomorCustomerService || '',
+                    jamBuka: profile.jamBuka || '',
+                    jamKeluar: profile.jamKeluar || '',
+                    fotoFile: null
+                });
+                // Set photo preview if exists
+                if (profile.foto) {
+                    setPhotoPreview(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/${profile.foto}`);
+                }
+            }
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memuat profil perusahaan');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleUpdate = () => {
-        alert('Informasi klinik berhasil diperbarui!');
-    };
-
-    const handleDelete = () => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus deskripsi ini?')) {
-            setFormData({
-                description: '',
-                vision: '',
-                mission: '',
-                openingHours: '',
-                closingHours: '',
-                photo: ''
-            });
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setFormData(prev => ({ ...prev, fotoFile: file }));
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
+
+    const buildFormData = (data) => {
+        const fd = new FormData();
+        fd.append('visi', data.visi);
+        fd.append('misi', data.misi);
+        fd.append('deskripsiPerusahaan', data.deskripsiPerusahaan || '');
+        fd.append('nomorCustomerService', data.nomorCustomerService || '');
+        // Format time to H:i (remove seconds if present)
+        fd.append('jamBuka', data.jamBuka ? data.jamBuka.substring(0, 5) : '');
+        fd.append('jamKeluar', data.jamKeluar ? data.jamKeluar.substring(0, 5) : '');
+        if (data.fotoFile) {
+            fd.append('foto', data.fotoFile);
+        }
+        return fd;
+    };
+
+    const handleUpdate = async () => {
+        try {
+            setError('');
+            const formDataToSend = buildFormData(formData);
+
+            if (profileId) {
+                // Update existing profile
+                formDataToSend.append('_method', 'PUT');
+                await apiFetch(`/api/profil-perusahaan/${profileId}`, {
+                    method: 'POST',
+                    body: formDataToSend,
+                });
+                alert('Informasi klinik berhasil diperbarui!');
+            } else {
+                // Create new profile
+                await apiFetch('/api/profil-perusahaan', {
+                    method: 'POST',
+                    body: formDataToSend,
+                });
+                alert('Profil klinik berhasil ditambahkan!');
+            }
+
+            await fetchProfile();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memperbarui profil');
+            alert('Gagal memperbarui profil: ' + (err?.data?.message || 'Terjadi kesalahan'));
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!profileId) {
+            alert('Tidak ada profil untuk dihapus');
+            return;
+        }
+
+        window.history.pushState({}, '', `/api/profil-perusahaan/${profileId}`);
+        const confirmed = window.confirm('Apakah Anda yakin ingin menghapus profil ini?');
+        window.history.pushState({}, '', '/clinic-profile');
+
+        if (confirmed) {
+            try {
+                await apiFetch(`/api/profil-perusahaan/${profileId}`, {
+                    method: 'DELETE',
+                });
+                setProfileId(null);
+                setFormData({
+                    visi: '',
+                    misi: '',
+                    deskripsiPerusahaan: '',
+                    nomorCustomerService: '',
+                    jamBuka: '',
+                    jamKeluar: '',
+                    fotoFile: null
+                });
+                setPhotoPreview('');
+                alert('Profil berhasil dihapus!');
+            } catch (err) {
+                setError(err?.data?.message || 'Gagal menghapus profil');
+                alert('Gagal menghapus profil');
+            }
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <p className="text-center text-gray-500">Memuat data...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
@@ -40,13 +164,15 @@ const ClinicProfileForm = () => {
                 Halaman ini menampilkan informasi Tentang kami yang tersedia di sistem. Anda dapat menambah, memperbarui, atau menghapus Tentang kami sesuai kebutuhan.
             </p>
 
+            {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">{error}</div>}
+
             <div className="space-y-4">
                 {/* Description */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Deskripsi Klinik</label>
                     <textarea
-                        name="description"
-                        value={formData.description}
+                        name="deskripsiPerusahaan"
+                        value={formData.deskripsiPerusahaan}
                         onChange={handleChange}
                         rows="4"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
@@ -59,8 +185,8 @@ const ClinicProfileForm = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Visi Klinik</label>
                         <input
                             type="text"
-                            name="vision"
-                            value={formData.vision}
+                            name="visi"
+                            value={formData.visi}
                             onChange={handleChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
@@ -69,12 +195,25 @@ const ClinicProfileForm = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Misi Klinik</label>
                         <input
                             type="text"
-                            name="mission"
-                            value={formData.mission}
+                            name="misi"
+                            value={formData.misi}
                             onChange={handleChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
                     </div>
+                </div>
+
+                {/* Customer Service Number */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nomor Customer Service</label>
+                    <input
+                        type="text"
+                        name="nomorCustomerService"
+                        value={formData.nomorCustomerService}
+                        onChange={handleChange}
+                        placeholder="08123456789"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    />
                 </div>
 
                 {/* Operating Hours */}
@@ -83,8 +222,8 @@ const ClinicProfileForm = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Jam Operasional Buka</label>
                         <input
                             type="time"
-                            name="openingHours"
-                            value={formData.openingHours}
+                            name="jamBuka"
+                            value={formData.jamBuka}
                             onChange={handleChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
@@ -93,8 +232,8 @@ const ClinicProfileForm = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Jam Operasional Tutup</label>
                         <input
                             type="time"
-                            name="closingHours"
-                            value={formData.closingHours}
+                            name="jamKeluar"
+                            value={formData.jamKeluar}
                             onChange={handleChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />
@@ -110,16 +249,7 @@ const ClinicProfileForm = () => {
                             accept="image/*"
                             className="hidden"
                             id="company-photo"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                        setFormData(prev => ({ ...prev, photo: reader.result }));
-                                    };
-                                    reader.readAsDataURL(file);
-                                }
-                            }}
+                            onChange={handleFileChange}
                         />
                         <label
                             htmlFor="company-photo"
@@ -128,26 +258,28 @@ const ClinicProfileForm = () => {
                             Choose File
                         </label>
                         <span className="text-sm text-gray-500">
-                            {formData.photo ? 'File Selected' : 'No File Choosen'}
+                            {formData.fotoFile ? formData.fotoFile.name : (photoPreview ? 'File Selected' : 'No File Choosen')}
                         </span>
                     </div>
-                    {formData.photo && (
-                        <img src={formData.photo} alt="Company Preview" className="mt-4 w-48 h-32 object-cover rounded-lg border border-gray-200" />
+                    {photoPreview && (
+                        <img src={photoPreview} alt="Company Preview" className="mt-4 w-48 h-32 object-cover rounded-lg border border-gray-200" />
                     )}
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-4">
                     <Button onClick={handleUpdate} className="bg-primary hover:bg-primary-dark">
-                        Perbarui
+                        {profileId ? 'Perbarui' : 'Tambah'}
                     </Button>
-                    <button
-                        type="button"
-                        onClick={handleDelete}
-                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
-                    >
-                        Hapus
-                    </button>
+                    {profileId && (
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
+                        >
+                            Hapus
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

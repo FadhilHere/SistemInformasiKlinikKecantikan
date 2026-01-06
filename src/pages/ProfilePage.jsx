@@ -4,26 +4,48 @@ import Footer from '../fragments/Footer'
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import {
-    isValidEmail,
-    isValidPassword,
     isValidPhone,
     isNotEmpty,
     sanitizeInput
 } from '../utils/validators'
+import { apiFetch } from '../lib/api'
+import { useEffect } from 'react'
 
 const ProfilePage = ({ isLoggedIn, onLogout }) => {
     const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
 
     // Form States
-    const [name, setName] = useState("Bintang Puspita")
-    const [address, setAddress] = useState("Jl. Mangkubumi")
+    const [name, setName] = useState("")
+    const [address, setAddress] = useState("")
     const [birthDate, setBirthDate] = useState(null)
     const [gender, setGender] = useState("Perempuan")
-    const [whatsapp, setWhatsapp] = useState("0821-8765-0987")
-    const [email, setEmail] = useState("bintang@gmail.com")
-    const [password, setPassword] = useState("12345")
-    const [confirmPassword, setConfirmPassword] = useState("12345")
+    const [whatsapp, setWhatsapp] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' })
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            const fetchProfile = async () => {
+                try {
+                    const user = await apiFetch('/api/me');
+                    setName(user.nama || '');
+                    setAddress(user.alamat || '');
+                    setBirthDate(user.tanggalLahir ? new Date(user.tanggalLahir) : null);
+                    setGender(user.jenisKelamin || 'Perempuan');
+                    setWhatsapp(user.nomorWa || '');
+                    setEmail(user.email || '');
+                } catch (error) {
+                    console.error("Failed to fetch profile", error);
+                    if (error.status === 401) {
+                         onLogout();
+                    }
+                }
+            };
+            fetchProfile();
+        }
+    }, [isLoggedIn, onLogout]);
 
     const handleSave = () => {
         // Basic Empty Checks

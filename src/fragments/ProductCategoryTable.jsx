@@ -1,51 +1,111 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductCategoryModal from './ProductCategoryModal';
 import DeleteModal from './DeleteModal';
-
-// Mock Data
-const INITIAL_CATEGORIES = [
-    { id: 1, categoryName: 'Serum', categoryDescription: 'Produk perawatan kulit konsentrat tinggi', productCount: 15 },
-    { id: 2, categoryName: 'Cream', categoryDescription: 'Produk pelembab wajah dan tubuh', productCount: 22 },
-    { id: 3, categoryName: 'Facial Wash', categoryDescription: 'Pembersih wajah untuk berbagai jenis kulit', productCount: 10 },
-    { id: 4, categoryName: 'Toner', categoryDescription: 'Penyegar dan penyeimbang pH kulit', productCount: 8 },
-    { id: 5, categoryName: 'Mask', categoryDescription: 'Masker wajah untuk perawatan intensif', productCount: 12 }
-];
+import { apiFetch } from '../lib/api';
 
 const ProductCategoryTable = () => {
-    const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+    const [categories, setCategories] = useState([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    // Handlers
-    const handleAdd = (newCategory) => {
-        const categoryWithId = { ...newCategory, id: categories.length + 1, productCount: 0 };
-        setCategories([...categories, categoryWithId]);
-        setIsAddModalOpen(false);
+    const fetchCategories = async () => {
+        try {
+            setIsLoading(true);
+            setError('');
+            const res = await apiFetch('/api/kategori-produk');
+            const list = res?.data || res || [];
+            setCategories(Array.isArray(list) ? list : []);
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memuat data kategori');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleEdit = (updatedCategory) => {
-        setCategories(categories.map(c => c.id === updatedCategory.id ? updatedCategory : c));
-        setIsEditModalOpen(false);
-        setSelectedCategory(null);
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const handleAdd = async (newCategory) => {
+        try {
+            await apiFetch('/api/kategori-produk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newCategory),
+            });
+            setIsAddModalOpen(false);
+            await fetchCategories();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal menambah kategori');
+        }
     };
 
-    const handleDelete = () => {
-        setCategories(categories.filter(c => c.id !== selectedCategory.id));
-        setIsDeleteModalOpen(false);
-        setSelectedCategory(null);
+    const handleEdit = async (updatedCategory) => {
+        if (!selectedCategory) return;
+        try {
+            await apiFetch(`/api/kategori-produk/${selectedCategory.idKategori}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedCategory),
+            });
+            closeEditModal();
+            await fetchCategories();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memperbarui kategori');
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!selectedCategory) return;
+        try {
+            await apiFetch(`/api/kategori-produk/${selectedCategory.idKategori}`, {
+                method: 'DELETE',
+            });
+            setIsDeleteModalOpen(false);
+            setSelectedCategory(null);
+            await fetchCategories();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal menghapus kategori');
+        }
     };
 
     const openEditModal = (category) => {
         setSelectedCategory(category);
         setIsEditModalOpen(true);
+        window.history.pushState({}, '', `/categories/${category.idKategori}`);
     };
 
     const openDeleteModal = (category) => {
         setSelectedCategory(category);
         setIsDeleteModalOpen(true);
+        window.history.pushState({}, '', `/api/kategori-produk/${category.idKategori}`);
     };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setSelectedCategory(null);
+        window.history.pushState({}, '', '/categories');
+    };
+
+    const closeEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedCategory(null);
+        window.history.pushState({}, '', '/categories');
+    };
+
+    // Filter categories based on search query
+    const filteredCategories = categories.filter((category) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        const nama = (category.nama || '').toLowerCase();
+        const deskripsi = (category.deskripsi || '').toLowerCase();
+        return nama.includes(query) || deskripsi.includes(query);
+    });
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -57,6 +117,8 @@ const ProductCategoryTable = () => {
                         <input
                             type="text"
                             placeholder="Cari..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-gray-100 text-sm pl-4 pr-10 py-2 rounded-md outline-none focus:ring-1 focus:ring-primary w-64"
                         />
                         <button className="absolute right-0 top-0 bottom-0 px-3 bg-primary rounded-r-md text-white flex items-center justify-center hover:bg-primary-dark">
@@ -80,53 +142,61 @@ const ProductCategoryTable = () => {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto min-h-[300px]">
-                <table className="w-full text-sm text-left">
-                    <thead className="text-gray-500 border-b border-gray-100 bg-white">
-                        <tr>
-                            <th className="py-4 px-6 font-medium w-20">No</th>
-                            <th className="py-4 px-6 font-medium">Nama</th>
-                            <th className="py-4 px-6 font-medium">Deskripsi</th>
-                            <th className="py-4 px-6 font-medium">Jumlah Produk</th>
-                            <th className="py-4 px-6 font-medium text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map((category, index) => (
-                            <tr key={category.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-6 text-gray-400">{index + 1}</td>
-                                <td className="py-4 px-6 font-medium text-gray-900">{category.categoryName}</td>
-                                <td className="py-4 px-6 text-gray-500">{category.categoryDescription}</td>
-                                <td className="py-4 px-6 text-gray-900">{category.productCount}</td>
-                                <td className="py-4 px-6">
-                                    <div className="flex items-center justify-center gap-4">
-                                        <button
-                                            onClick={() => openEditModal(category)}
-                                            className="text-gray-400 hover:text-blue-500"
-                                        >
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => openDeleteModal(category)}
-                                            className="text-gray-400 hover:text-red-500"
-                                        >
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
+            {error && <div className="px-4 py-2 text-sm text-red-600">{error}</div>}
+            {isLoading ? (
+                <div className="py-6 text-center text-sm text-gray-500">Memuat data...</div>
+            ) : (
+                <div className="overflow-x-auto min-h-[300px]">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-gray-500 border-b border-gray-100 bg-white">
+                            <tr>
+                                <th className="py-4 px-6 font-medium w-20">No</th>
+                                <th className="py-4 px-6 font-medium">Nama</th>
+                                <th className="py-4 px-6 font-medium">Deskripsi</th>
+                                <th className="py-4 px-6 font-medium text-center">Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
+                        </thead>
+                        <tbody>
+                            {filteredCategories.map((category, index) => (
+                                <tr key={category.idKategori} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                    <td className="py-4 px-6 text-gray-400">{index + 1}</td>
+                                    <td className="py-4 px-6 font-medium text-gray-900">{category.nama}</td>
+                                    <td className="py-4 px-6 text-gray-500">{category.deskripsi || '-'}</td>
+                                    <td className="py-4 px-6">
+                                        <div className="flex items-center justify-center gap-4">
+                                            <button
+                                                onClick={() => openEditModal(category)}
+                                                className="text-gray-400 hover:text-blue-500"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => openDeleteModal(category)}
+                                                className="text-gray-400 hover:text-red-500"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {filteredCategories.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" className="px-4 py-6 text-center text-sm text-gray-500">
+                                        Tidak ada data kategori
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
             {/* Pagination */}
             <div className="flex items-center justify-between p-4 border-t border-gray-100">
                 <button className="px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm">
@@ -147,7 +217,6 @@ const ProductCategoryTable = () => {
                     </svg>
                 </button>
             </div>
-
             {/* Modals */}
             <ProductCategoryModal
                 isOpen={isAddModalOpen}
@@ -158,7 +227,7 @@ const ProductCategoryTable = () => {
 
             <ProductCategoryModal
                 isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                onClose={closeEditModal}
                 mode="edit"
                 initialData={selectedCategory}
                 onSubmit={handleEdit}
@@ -166,7 +235,7 @@ const ProductCategoryTable = () => {
 
             <DeleteModal
                 isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
+                onClose={closeDeleteModal}
                 onConfirm={handleDelete}
                 itemType="kategori"
             />

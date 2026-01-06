@@ -2,7 +2,7 @@ import LogoIcon from '../components/atoms/LogoIcon'
 
 const Footer = () => {
   return (
-    <footer className="mt-16 w-full">
+    <footer className="mt-16">
       <div className="bg-[#2f7f00] py-12 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr] lg:px-8">
           <div className="flex flex-col gap-4">

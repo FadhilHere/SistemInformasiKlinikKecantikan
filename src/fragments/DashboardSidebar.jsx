@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import LogoIcon from '../components/atoms/LogoIcon';
 import EditProfileModal from './EditProfileModal';
@@ -26,6 +27,19 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
     const navigate = useNavigate();
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await apiFetch('/api/me');
+                setUser(res.data || res);
+            } catch (err) {
+                console.error('Failed to fetch user info:', err);
+            }
+        };
+        fetchUser();
+    }, []);
 
     const handleNavigation = (path) => {
         navigate(`/${path}`);
@@ -57,16 +71,27 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
                     <div className="text-[10px] tracking-widest text-gray-400 mt-1">AESTHETIC CLINIC</div>
                 </div>
 
-                {/* Profile Circle - Clickable */}
+                {/* Profile Photo - Clickable */}
                 <div
                     onClick={() => setIsEditProfileOpen(true)}
-                    className="w-24 h-24 bg-gray-200 rounded-full mb-3 cursor-pointer hover:ring-4 hover:ring-primary/20 transition-all"
+                    className="w-24 h-24 bg-gray-200 rounded-full mb-3 cursor-pointer hover:ring-4 hover:ring-primary/20 transition-all overflow-hidden border-2 border-primary/10"
                 >
+                    {user?.foto ? (
+                        <img
+                            src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/${user.foto}`}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-primary/40 bg-primary/5">
+                            <UserIcon className="w-12 h-12" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="text-center">
-                    <h3 className="font-bold text-gray-800">BINTANG</h3>
-                    <p className="text-[10px] text-gray-500">Bintang22si@mahasiswa.pcr.ac.id</p>
+                    <h3 className="font-bold text-gray-800 uppercase">{user?.nama || 'USER'}</h3>
+                    <p className="text-[10px] text-gray-500">{user?.email || 'email@example.com'}</p>
                 </div>
             </div>
 

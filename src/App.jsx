@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegistrationPage from './pages/RegistrationPage'
@@ -31,16 +31,19 @@ import TestimonialManagementPage from './pages/TestimonialManagementPage'
 import ClinicProfilePage from './pages/ClinicProfilePage'
 
 const App = () => {
-  // No more activePage state
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // Initialize state based on token existence
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'))
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
   }
 
   const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
     setIsLoggedIn(false)
   }
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} />} />
@@ -61,7 +64,12 @@ const App = () => {
       <Route path="/doctors" element={<DoctorsPage isLoggedIn={isLoggedIn} />} />
       <Route path="/testimonial" element={<TestimonialPage isLoggedIn={isLoggedIn} />} />
       <Route path="/testimonial-detail" element={<TestimonialDetailPage isLoggedIn={isLoggedIn} />} />
-      <Route path="/reservation" element={<ReservationPage isLoggedIn={isLoggedIn} />} />
+      
+      {/* Protected Reservation Route */}
+      <Route path="/reservation" element={
+        isLoggedIn ? <ReservationPage isLoggedIn={isLoggedIn} /> : <Navigate to="/login" state={{ from: '/reservation' }} />
+      } />
+      
       <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/dashboard" element={<DashboardPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
       <Route path="/products" element={<ProductManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
@@ -74,7 +82,7 @@ const App = () => {
       <Route path="/schedules" element={<ScheduleReservationPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
       <Route path="/categories" element={<ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
       <Route path="/testimonials" element={<TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/clinic-profile" element={<ClinicProfilePage isLoggedIn={isLoggedIn} onL ogout={handleLogout} />} />
+      <Route path="/clinic-profile" element={<ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

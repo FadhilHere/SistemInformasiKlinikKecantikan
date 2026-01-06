@@ -3,18 +3,21 @@ import Button from '../components/atoms/Button';
 
 const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        startTime: '',
-        endTime: ''
+        jamMulai: '',
+        jamSelesai: ''
     });
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    jamMulai: initialData.jamMulai || '',
+                    jamSelesai: initialData.jamSelesai || ''
+                });
             } else {
                 setFormData({
-                    startTime: '',
-                    endTime: ''
+                    jamMulai: '',
+                    jamSelesai: ''
                 });
             }
         }
@@ -29,7 +32,14 @@ const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+
+        // Convert time format from HH:mm:ss to HH:mm (H:i format for Laravel)
+        const submitData = {
+            jamMulai: formData.jamMulai.substring(0, 5), // Remove seconds
+            jamSelesai: formData.jamSelesai.substring(0, 5) // Remove seconds
+        };
+
+        onSubmit(submitData);
     };
 
     return (
@@ -38,7 +48,7 @@ const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, 
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900">
-                        {mode === 'add' ? 'Tambah Data Jadwal Reservasi Treatment' : 'Edit Data Jadwal Reservasi Treatment'}
+                        {mode === 'add' ? 'Tambah Jadwal' : 'Edit Jadwal'}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -55,9 +65,10 @@ const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, 
                             <label className="text-sm font-medium text-gray-700">Jam Mulai</label>
                             <input
                                 type="time"
-                                name="startTime"
-                                value={formData.startTime}
+                                name="jamMulai"
+                                value={formData.jamMulai}
                                 onChange={handleChange}
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -65,9 +76,10 @@ const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, 
                             <label className="text-sm font-medium text-gray-700">Jam Selesai</label>
                             <input
                                 type="time"
-                                name="endTime"
-                                value={formData.endTime}
+                                name="jamSelesai"
+                                value={formData.jamSelesai}
                                 onChange={handleChange}
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -75,7 +87,7 @@ const ScheduleReservationModal = ({ isOpen, onClose, mode = 'add', initialData, 
 
                     <div className="flex justify-end pt-4">
                         <Button type="submit" className="min-w-[150px]">
-                            Tambah Data
+                            {mode === 'add' ? 'Tambah Jadwal' : 'Simpan Perubahan'}
                         </Button>
                     </div>
                 </form>

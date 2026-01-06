@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import { API_BASE_URL } from '../lib/api';
 
 const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
@@ -14,9 +15,17 @@ const DoctorModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
+                // Set existing photo URL for preview
+                let photoUrl = '';
+                if (initialData.foto) {
+                    photoUrl = initialData.foto.startsWith('http')
+                        ? initialData.foto
+                        : `${API_BASE_URL}/storage/${initialData.foto}`;
+                }
+
                 setFormData({
                     nama: initialData.nama || initialData.name || '',
-                    foto: initialData.foto || initialData.photo || '',
+                    foto: photoUrl,
                     fotoFile: null,
                     email: initialData.email || '',
                     deskripsi: initialData.deskripsi || initialData.description || '',

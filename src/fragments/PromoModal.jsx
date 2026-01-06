@@ -1,37 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import { apiFetch } from '../lib/api';
 
 const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        type: '',
-        category: '',
-        product: '',
-        startDate: '',
-        endDate: '',
-        minTransaction: '',
-        code: '',
-        description: '',
-        discount: ''
+        namaPromo: '',
+        jenisPromo: '',
+        kode: '',
+        diskon: '',
+        deskripsi: '',
+        tanggalMulai: '',
+        tanggalSelesai: '',
+        minimalTransaksi: '',
+        status: 'Active',
+        idKategori: '',
+        idProduk: '',
+        gambar: null
     });
+    const [categories, setCategories] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [photoPreview, setPhotoPreview] = useState('');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [catRes, prodRes] = await Promise.all([
+                    apiFetch('/api/kategori-produk'),
+                    apiFetch('/api/produk-klinik')
+                ]);
+                setCategories(Array.isArray(catRes?.data || catRes) ? (catRes?.data || catRes) : []);
+                setProducts(Array.isArray(prodRes?.data || prodRes) ? (prodRes?.data || prodRes) : []);
+            } catch (error) {
+                console.error("Failed to fetch dropdown data", error);
+            }
+        };
+        if (isOpen) fetchData();
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    namaPromo: initialData.namaPromo || '',
+                    jenisPromo: initialData.jenisPromo || '',
+                    kode: initialData.kode || '',
+                    diskon: initialData.diskon || '',
+                    deskripsi: initialData.deskripsi || '',
+                    tanggalMulai: initialData.tanggalMulai ? initialData.tanggalMulai.substring(0, 10) : '',
+                    tanggalSelesai: initialData.tanggalSelesai ? initialData.tanggalSelesai.substring(0, 10) : '',
+                    minimalTransaksi: initialData.minimalTransaksi || '',
+                    // Convert boolean/int status from backend to string for form select
+                    status: (initialData.status === 1 || initialData.status === true || initialData.status === 'Active') ? 'Active' : 'Inactive',
+                    idKategori: initialData.idKategori || '',
+                    idProduk: initialData.idProduk || '',
+                    gambar: null
+                });
+                if (initialData.gambar) {
+                    setPhotoPreview(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/${initialData.gambar}`);
+                } else {
+                    setPhotoPreview('');
+                }
             } else {
                 setFormData({
-                    name: '',
-                    type: '',
-                    category: '',
-                    product: '',
-                    startDate: '',
-                    endDate: '',
-                    minTransaction: '',
-                    code: '',
-                    description: '',
-                    discount: ''
+                    namaPromo: '',
+                    jenisPromo: '',
+                    kode: '',
+                    diskon: '',
+                    deskripsi: '',
+                    tanggalMulai: '',
+                    tanggalSelesai: '',
+                    minimalTransaksi: '',
+                    status: 'Active',
+                    idKategori: '',
+                    idProduk: '',
+                    gambar: null
                 });
+                setPhotoPreview('');
             }
         }
     }, [isOpen, mode, initialData]);
@@ -41,6 +85,18 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setFormData(prev => ({ ...prev, gambar: file }));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -54,7 +110,6 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl m-4 my-8">
-                {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900">
                         {mode === 'add' ? 'Tambah Promo' : 'Edit Promo'}
@@ -67,72 +122,107 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className={labelClass}>Nama Promo</label>
-                            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Nama Promo" className={inputClass} />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Jenis Promo</label>
-                            <div className="relative">
-                                <select name="type" value={formData.type} onChange={handleChange} className={`${inputClass} appearance-none`}>
-                                    <option value="" disabled>Pilih Jenis Promo</option>
-                                    <option value="Discount">Discount</option>
-                                    <option value="Cashback">Cashback</option>
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                    <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                    {/* Image Upload */}
+                    <div>
+                        <label className={labelClass}>Gambar Promo</label>
+                        <div className="flex items-center gap-4">
+                            {photoPreview ? (
+                                <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border border-gray-200" />
+                            ) : (
+                                <div className="w-24 h-24 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                                    No Image
                                 </div>
+                            )}
+                            <div className="flex-1">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark"
+                                />
                             </div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className={labelClass}>Pilih Kategori Produk</label>
-                            <input type="text" name="category" value={formData.category} onChange={handleChange} placeholder="Nama Kategori" className={inputClass} />
-                            <span className="text-[10px] text-red-500 mt-1">*Pilih kategori produk bila promo berdasarkan kategori produk</span>
+                            <label className={labelClass}>Nama Promo</label>
+                            <input type="text" name="namaPromo" value={formData.namaPromo} onChange={handleChange} placeholder="Nama Promo" className={inputClass} required />
                         </div>
                         <div>
-                            <label className={labelClass}>Pilih Produk</label>
-                            <input type="text" name="product" value={formData.product} onChange={handleChange} placeholder="Nama Produk" className={inputClass} />
-                            <span className="text-[10px] text-red-500 mt-1">*Pilih produk bila promo berdasarkan produk</span>
+                            <label className={labelClass}>Jenis Promo</label>
+                            <div className="relative">
+                                <select name="jenisPromo" value={formData.jenisPromo} onChange={handleChange} className={`${inputClass} appearance-none`} required>
+                                    <option value="" disabled>Pilih Jenis Promo</option>
+                                    <option value="Discount">Discount</option>
+                                    <option value="Cashback">Cashback</option>
+                                    <option value="Buy 1 Get 1">Buy 1 Get 1</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className={labelClass}>Kategori Produk (Opsional)</label>
+                            <select name="idKategori" value={formData.idKategori} onChange={handleChange} className={`${inputClass} appearance-none`}>
+                                <option value="">Pilih Kategori</option>
+                                {categories.map(cat => (
+                                    <option key={cat.idKategori} value={cat.idKategori}>{cat.nama}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelClass}>Produk (Opsional)</label>
+                            <select name="idProduk" value={formData.idProduk} onChange={handleChange} className={`${inputClass} appearance-none`}>
+                                <option value="">Pilih Produk</option>
+                                {products.map(prod => (
+                                    <option key={prod.idProduk || prod.id} value={prod.idProduk || prod.id}>{prod.nama}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>Tanggal Mulai</label>
-                            <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className={inputClass} />
+                            <input type="date" name="tanggalMulai" value={formData.tanggalMulai} onChange={handleChange} className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Tanggal Selesai</label>
-                            <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className={inputClass} />
+                            <input type="date" name="tanggalSelesai" value={formData.tanggalSelesai} onChange={handleChange} className={inputClass} required />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>Minimal Transaksi</label>
-                            <input type="text" name="minTransaction" value={formData.minTransaction} onChange={handleChange} placeholder="Minimal Transaksi" className={inputClass} />
+                            <input type="number" name="minimalTransaksi" value={formData.minimalTransaksi} onChange={handleChange} placeholder="Contoh: 100000" className={inputClass} />
                         </div>
                         <div>
                             <label className={labelClass}>Kode Promo</label>
-                            <input type="text" name="code" value={formData.code} onChange={handleChange} placeholder="Kode Promo" className={inputClass} />
+                            <input type="text" name="kode" value={formData.kode} onChange={handleChange} placeholder="Kode Promo" className={inputClass} required />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className={labelClass}>Deskripsi Produk</label>
-                            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Deskripsi Produk" rows="4" className={`${inputClass} resize-none`}></textarea>
+                            <label className={labelClass}>Diskon (Nominal/Persen)</label>
+                            <input type="text" name="diskon" value={formData.diskon} onChange={handleChange} placeholder="Contoh: 10% atau 50000" className={inputClass} required />
                         </div>
                         <div>
-                            <label className={labelClass}>Diskon</label>
-                            <input type="text" name="discount" value={formData.discount} onChange={handleChange} placeholder="Diskon" className={inputClass} />
+                            <label className={labelClass}>Status</label>
+                            <select name="status" value={formData.status} onChange={handleChange} className={`${inputClass} appearance-none`}>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <div>
+                        <label className={labelClass}>Deskripsi Promo</label>
+                        <textarea name="deskripsi" value={formData.deskripsi} onChange={handleChange} placeholder="Deskripsi Promo" rows="4" className={`${inputClass} resize-none`}></textarea>
                     </div>
 
                     <div className="flex justify-end pt-4">

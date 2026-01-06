@@ -1,26 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
-import InputField from '../components/atoms/InputField';
+import { apiFetch } from '../lib/api';
 
 const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        price: '',
-        stock: '',
-        category: '',
-        description: ''
+        nama: '',
+        harga: '',
+        stok: '',
+        idKategori: '',
+        deskripsi: ''
     });
+    const [categories, setCategories] = useState([]);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+    // Fetch categories from API
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setIsLoadingCategories(true);
+                const res = await apiFetch('/api/kategori-produk');
+                const list = res?.data || res || [];
+                setCategories(Array.isArray(list) ? list : []);
+            } catch (err) {
+                console.error('Failed to fetch categories:', err);
+                setCategories([]);
+            } finally {
+                setIsLoadingCategories(false);
+            }
+        };
+
+        if (isOpen) {
+            fetchCategories();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && mode === 'edit' && initialData) {
-            setFormData(initialData);
+            setFormData({
+                nama: initialData.nama || '',
+                harga: initialData.harga || '',
+                stok: initialData.stok || initialData.stock || '',
+                idKategori: initialData.idKategori || '',
+                deskripsi: initialData.deskripsi || ''
+            });
         } else if (isOpen && mode === 'add') {
             setFormData({
-                name: '',
-                price: '',
-                stock: '',
-                category: '',
-                description: ''
+                nama: '',
+                harga: '',
+                stok: '',
+                idKategori: '',
+                deskripsi: ''
             });
         }
     }, [isOpen, mode, initialData]);
@@ -60,21 +89,23 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
                             <label className="text-sm font-medium text-gray-700">Nama Produk</label>
                             <input
                                 type="text"
-                                name="name"
-                                value={formData.name}
+                                name="nama"
+                                value={formData.nama}
                                 onChange={handleChange}
                                 placeholder="Nama Produk"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-700">Harga Produk</label>
                             <input
-                                type="text"
-                                name="price"
-                                value={formData.price}
+                                type="number"
+                                name="harga"
+                                value={formData.harga}
                                 onChange={handleChange}
                                 placeholder="Harga Produk"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -82,13 +113,14 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Stock</label>
+                            <label className="text-sm font-medium text-gray-700">Stok</label>
                             <input
                                 type="number"
-                                name="stock"
-                                value={formData.stock}
+                                name="stok"
+                                value={formData.stok}
                                 onChange={handleChange}
-                                placeholder="Jumlah Stock"
+                                placeholder="Jumlah Stok"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -96,15 +128,21 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
                             <label className="text-sm font-medium text-gray-700">Kategori</label>
                             <div className="relative">
                                 <select
-                                    name="category"
-                                    value={formData.category}
+                                    name="idKategori"
+                                    value={formData.idKategori}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
+                                    required
+                                    disabled={isLoadingCategories}
+                                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none disabled:bg-gray-100"
                                 >
-                                    <option value="" disabled>Pilih Kategori</option>
-                                    <option value="Serum">Serum</option>
-                                    <option value="Cream">Cream</option>
-                                    <option value="Facial Wash">Facial Wash</option>
+                                    <option value="" disabled>
+                                        {isLoadingCategories ? 'Memuat kategori...' : 'Pilih Kategori'}
+                                    </option>
+                                    {categories.map((category) => (
+                                        <option key={category.idKategori || category.id} value={category.idKategori || category.id}>
+                                            {category.namaKategori || category.nama || category.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
@@ -116,8 +154,8 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium text-gray-700">Deskripsi Produk</label>
                         <textarea
-                            name="description"
-                            value={formData.description}
+                            name="deskripsi"
+                            value={formData.deskripsi}
                             onChange={handleChange}
                             placeholder="Deskripsi Produk"
                             rows="4"

@@ -3,28 +3,54 @@ import Button from '../components/atoms/Button';
 
 const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        name: '',
+        nama: '',
         email: '',
-        gender: '',
-        address: '',
+        jenisKelamin: '',
+        alamat: '',
         role: '',
-        birthDate: '',
-        whatsapp: ''
+        tanggalLahir: '',
+        nomorWa: '',
+        password: '',
+        confirmPassword: ''
     });
+
+    // Helper function to convert date to yyyy-MM-dd format
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
-                setFormData(initialData);
+                setFormData({
+                    nama: initialData.nama || '',
+                    email: initialData.email || '',
+                    jenisKelamin: initialData.jenisKelamin || '',
+                    alamat: initialData.alamat || '',
+                    role: initialData.role || '',
+                    tanggalLahir: formatDateForInput(initialData.tanggalLahir),
+                    nomorWa: initialData.nomorWa || '',
+                    password: '',
+                    confirmPassword: ''
+                });
             } else {
                 setFormData({
-                    name: '',
+                    nama: '',
                     email: '',
-                    gender: '',
-                    address: '',
+                    jenisKelamin: '',
+                    alamat: '',
                     role: '',
-                    birthDate: '',
-                    whatsapp: ''
+                    tanggalLahir: '',
+                    nomorWa: '',
+                    password: '',
+                    confirmPassword: ''
                 });
             }
         }
@@ -39,14 +65,29 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+
+        // Validate password match if password is provided
+        if (formData.password && formData.password !== formData.confirmPassword) {
+            alert('Password dan konfirmasi password tidak cocok!');
+            return;
+        }
+
+        // Remove confirmPassword before submitting
+        const { confirmPassword, ...submitData } = formData;
+
+        // In edit mode, only include password if it's not empty
+        if (mode === 'edit' && !submitData.password) {
+            delete submitData.password;
+        }
+
+        onSubmit(submitData);
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
                     <h2 className="text-xl font-bold text-gray-900">
                         {mode === 'add' ? 'Tambah User' : 'Edit User'}
                     </h2>
@@ -62,13 +103,14 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Nama user</label>
+                            <label className="text-sm font-medium text-gray-700">Nama Lengkap</label>
                             <input
                                 type="text"
-                                name="name"
-                                value={formData.name}
+                                name="nama"
+                                value={formData.nama}
                                 onChange={handleChange}
-                                placeholder="Nama user"
+                                placeholder="Nama Lengkap"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -80,6 +122,7 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Email"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -89,10 +132,11 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-700">Jenis Kelamin</label>
                             <select
-                                name="gender"
-                                value={formData.gender}
+                                name="jenisKelamin"
+                                value={formData.jenisKelamin}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
+                                required
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             >
                                 <option value="">Pilih Jenis Kelamin</option>
                                 <option value="Laki-laki">Laki-laki</option>
@@ -100,13 +144,13 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                             </select>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Alamat</label>
+                            <label className="text-sm font-medium text-gray-700">Tanggal Lahir</label>
                             <input
-                                type="text"
-                                name="address"
-                                value={formData.address}
+                                type="date"
+                                name="tanggalLahir"
+                                value={formData.tanggalLahir}
                                 onChange={handleChange}
-                                placeholder="Alamat"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
@@ -119,36 +163,71 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                                 name="role"
                                 value={formData.role}
                                 onChange={handleChange}
-                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none"
+                                required
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             >
                                 <option value="">Pilih Role</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Staff">Staff</option>
-                                <option value="Customer">Customer</option>
+                                <option value="admin">Admin</option>
+                                <option value="pelanggan">Pelanggan</option>
                             </select>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Tanggal Lahir</label>
+                            <label className="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
                             <input
-                                type="date"
-                                name="birthDate"
-                                value={formData.birthDate}
+                                type="text"
+                                name="nomorWa"
+                                value={formData.nomorWa}
                                 onChange={handleChange}
+                                placeholder="08123456789"
+                                required
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Nomor Whatsapp</label>
-                        <input
-                            type="text"
-                            name="whatsapp"
-                            value={formData.whatsapp}
+                        <label className="text-sm font-medium text-gray-700">Alamat</label>
+                        <textarea
+                            name="alamat"
+                            value={formData.alamat}
                             onChange={handleChange}
-                            placeholder="Nomor Whatsapp"
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                        />
+                            placeholder="Alamat Lengkap"
+                            rows="3"
+                            required
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
+                        ></textarea>
+                    </div>
+
+                    {/* Password fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">
+                                Password {mode === 'edit' && <span className="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span>}
+                            </label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="Password"
+                                required={mode === 'add'}
+                                minLength="6"
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
+                            <input
+                                type="password"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="Konfirmasi Password"
+                                required={mode === 'add' || formData.password}
+                                minLength="6"
+                                className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex justify-end pt-4">

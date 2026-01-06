@@ -1,44 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PromoModal from './PromoModal';
 import DeleteModal from './DeleteModal';
-
-// Mock Data
-const INITIAL_PROMOS = Array(3).fill({
-    name: 'Diskon Akhir Tahun',
-    type: 'Discount',
-    code: 'DAT2023',
-    discount: '10%',
-    description: 'Diskon spesial akhir tahun untuk treatmen...',
-    startDate: '2023-12-01',
-    endDate: '2023-12-31',
-    minTransaction: 'Rp 200.000',
-    status: 'Active'
-}).map((p, i) => ({ ...p, id: i + 1 }));
+import { apiFetch } from '../lib/api';
 
 const PromoTable = () => {
-    const [promos, setPromos] = useState(INITIAL_PROMOS);
+    const [promos, setPromos] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState(null);
 
+    // Fetch Promos
+    const fetchPromos = async () => {
+        try {
+            setIsLoading(true);
+            setError('');
+            const res = await apiFetch('/api/promo');
+            const list = res?.data || res || [];
+            setPromos(Array.isArray(list) ? list : []);
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memuat data promo');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPromos();
+    }, []);
+
+    // Helper: Build FormData
+    const buildFormData = (data) => {
+        const formData = new FormData();
+        formData.append('namaPromo', data.namaPromo);
+        formData.append('jenisPromo', data.jenisPromo);
+        formData.append('kode', data.kode);
+        formData.append('diskon', data.diskon);
+        formData.append('deskripsi', data.deskripsi || '');
+        formData.append('tanggalMulai', data.tanggalMulai);
+        formData.append('tanggalSelesai', data.tanggalSelesai);
+        formData.append('minimalTransaksi', data.minimalTransaksi || 0);
+        // Convert status to boolean/integer (1 or 0) for backend
+        // Default to 1 (Active) if undefined
+        const statusValue = (data.status === 'Active' || data.status === '1' || data.status === 1 || data.status === true) ? 1 : 0;
+        formData.append('status', statusValue);
+
+        // Only append optional FKs if they have a non-empty value
+        if (data.idKategori && data.idKategori !== '') formData.append('idKategori', data.idKategori);
+        if (data.idProduk && data.idProduk !== '') formData.append('idProduk', data.idProduk);
+
+        if (data.gambar instanceof File) {
+            formData.append('gambar', data.gambar);
+        }
+        return formData;
+    };
+
     // Handlers
-    const handleAdd = (newPromo) => {
-        const promoWithId = { ...newPromo, id: promos.length + 1, status: 'Active' };
-        setPromos([...promos, promoWithId]);
-        setIsAddModalOpen(false);
+    const handleAdd = async (newPromo) => {
+        try {
+            const formData = buildFormData(newPromo);
+            await apiFetch('/api/promo', {
+                method: 'POST',
+                body: formData,
+            });
+            setIsAddModalOpen(false);
+            await fetchPromos();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal menambah promo');
+            alert('Gagal menambah promo: ' + (err?.data?.message || err.message));
+        }
     };
 
-    const handleEdit = (updatedPromo) => {
-        setPromos(promos.map(p => p.id === updatedPromo.id ? updatedPromo : p));
-        setIsEditModalOpen(false);
-        setSelectedPromo(null);
+    const handleEdit = async (updatedPromo) => {
+        if (!selectedPromo) return;
+        try {
+            const formData = buildFormData(updatedPromo);
+            formData.append('_method', 'PUT'); // For Laravel
+
+            await apiFetch(`/api/promo/${selectedPromo.idPromo}`, {
+                method: 'POST', // Use POST for FormData with _method=PUT
+                body: formData,
+            });
+            setIsEditModalOpen(false);
+            setSelectedPromo(null);
+            await fetchPromos();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal memperbarui promo');
+            alert('Gagal memperbarui promo: ' + (err?.data?.message || err.message));
+        }
     };
 
-    const handleDelete = () => {
-        setPromos(promos.filter(p => p.id !== selectedPromo.id));
-        setIsDeleteModalOpen(false);
-        setSelectedPromo(null);
+    const handleDelete = async () => {
+        if (!selectedPromo) return;
+        try {
+            await apiFetch(`/api/promo/${selectedPromo.idPromo}`, {
+                method: 'DELETE',
+            });
+            setIsDeleteModalOpen(false);
+            setSelectedPromo(null);
+            await fetchPromos();
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal menghapus promo');
+            alert('Gagal menghapus promo: ' + (err?.data?.message || err.message));
+        }
     };
 
     const openEditModal = (promo) => {
@@ -49,6 +117,31 @@ const PromoTable = () => {
     const openDeleteModal = (promo) => {
         setSelectedPromo(promo);
         setIsDeleteModalOpen(true);
+        window.history.pushState({}, '', `/api/promo/${promo.idPromo}`);
+    };
+
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setSelectedPromo(null);
+        window.history.pushState({}, '', '/promo');
+    };
+
+    // Helper functions
+    const formatCurrency = (value) => {
+        if (!value) return '-';
+        return `Rp ${parseInt(value).toLocaleString('id-ID')}`;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+    };
+
+    const getPhotoUrl = (path) => {
+        if (!path) return null;
+        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/storage/${path}`;
     };
 
     const getStatusBadgeClass = (status) => {
@@ -62,42 +155,39 @@ const PromoTable = () => {
         }
     };
 
+    // Filter
+    const filteredPromos = promos.filter(promo =>
+        promo.namaPromo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        promo.kode.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             {/* Table Header Controls */}
-            <div className="p-4 flex items-center border-b border-gray-100">
-                <div className="flex gap-2 ml-auto">
-                    {/* Filter Dropdown */}
-                    <div className="relative">
-                        <select className="appearance-none bg-gray-100 text-sm pl-4 pr-8 py-2 rounded-md border-none focus:ring-1 focus:ring-primary cursor-pointer text-gray-600">
-                            <option>All Promo</option>
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                            <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                        </div>
-                    </div>
-
+            <div className="p-4 flex items-center justify-between border-b border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900">Daftar Promo</h2>
+                <div className="flex gap-2">
                     {/* Search Bar */}
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search Promo"
+                            placeholder="Cari Promo..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-gray-100 text-sm pl-4 pr-10 py-2 rounded-md outline-none focus:ring-1 focus:ring-primary w-64"
                         />
-                        <button className="absolute right-0 top-0 bottom-0 px-3 bg-primary rounded-r-md text-white flex items-center justify-center hover:bg-primary-dark">
+                        <div className="absolute right-0 top-0 bottom-0 px-3 flex items-center justify-center text-gray-400 pointer-events-none">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
-                        </button>
+                        </div>
                     </div>
 
                     {/* Add Button */}
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-primary hover:bg-primary-dark text-white p-2 rounded-md transition-colors"
+                        className="bg-primary hover:bg-primary-dark text-white p-2 rounded-md transition-colors flex items-center gap-2 px-4"
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -107,86 +197,100 @@ const PromoTable = () => {
                 </div>
             </div>
 
+            {error && <div className="p-4 bg-red-50 text-red-600 text-sm">{error}</div>}
+
             {/* Table */}
             <div className="overflow-x-auto min-h-[300px]">
                 <table className="w-full text-sm text-left">
                     <thead className="text-gray-500 border-b border-gray-100 bg-white">
                         <tr>
                             <th className="py-4 px-6 font-medium w-16">No</th>
-                            <th className="py-4 px-6 font-medium">Nama</th>
-                            <th className="py-4 px-6 font-medium">Jenis Promo</th>
-                            <th className="py-4 px-6 font-medium">Kode Promo</th>
+                            <th className="py-4 px-6 font-medium">Gambar</th>
+                            <th className="py-4 px-6 font-medium">Nama Promo</th>
+                            <th className="py-4 px-6 font-medium">Jenis</th>
+                            <th className="py-4 px-6 font-medium">Kode</th>
                             <th className="py-4 px-6 font-medium">Diskon</th>
-                            <th className="py-4 px-6 font-medium">Deskripsi</th>
-                            <th className="py-4 px-6 font-medium">Tanggal Mulai</th>
-                            <th className="py-4 px-6 font-medium">Tanggal Selesai</th>
-                            <th className="py-4 px-6 font-medium">Minimal Transaksi</th>
+                            <th className="py-4 px-6 font-medium">Periode</th>
+                            <th className="py-4 px-6 font-medium">Min. Transaksi</th>
                             <th className="py-4 px-6 font-medium text-center">Status</th>
-                            <th className="py-4 px-6 font-medium text-center">Action</th>
+                            <th className="py-4 px-6 font-medium text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {promos.map((promo, index) => (
-                            <tr key={promo.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                <td className="py-4 px-6 text-gray-400">{index + 1}</td>
-                                <td className="py-4 px-6 font-medium text-gray-900">{promo.name}</td>
-                                <td className="py-4 px-6 text-gray-500">{promo.type}</td>
-                                <td className="py-4 px-6 text-gray-900 font-mono">{promo.code}</td>
-                                <td className="py-4 px-6 text-green-600 font-medium">{promo.discount}</td>
-                                <td className="py-4 px-6 text-gray-500 max-w-xs truncate">{promo.description}</td>
-                                <td className="py-4 px-6 text-gray-500 whitespace-nowrap">{promo.startDate}</td>
-                                <td className="py-4 px-6 text-gray-500 whitespace-nowrap">{promo.endDate}</td>
-                                <td className="py-4 px-6 text-gray-900">{promo.minTransaction}</td>
-                                <td className="py-4 px-6 text-center">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <select
-                                            value={promo.status}
-                                            onChange={(e) => {
-                                                const newStatus = e.target.value;
-                                                setPromos(promos.map(p =>
-                                                    p.id === promo.id ? { ...p, status: newStatus } : p
-                                                ));
-                                            }}
-                                            className={`px-3 py-1 rounded-full text-xs font-medium border-0 cursor-pointer ${getStatusBadgeClass(promo.status)}`}
-                                        >
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                        </select>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M7 10l5 5 5-5z" />
-                                        </svg>
-                                    </div>
-                                </td>
-                                <td className="py-4 px-6">
-                                    <div className="flex items-center justify-center gap-4">
-                                        <button
-                                            onClick={() => openEditModal(promo)}
-                                            className="text-gray-400 hover:text-blue-500"
-                                        >
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => openDeleteModal(promo)}
-                                            className="text-gray-400 hover:text-red-500"
-                                        >
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                        </button>
-                                        <button className="text-gray-400 hover:text-primary">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan="10" className="text-center py-8 text-gray-400">Memuat data...</td>
                             </tr>
-                        ))}
+                        ) : filteredPromos.length === 0 ? (
+                            <tr>
+                                <td colSpan="10" className="text-center py-8 text-gray-400">Tidak ada data promo ditemukan</td>
+                            </tr>
+                        ) : (
+                            filteredPromos.map((promo, index) => (
+                                <tr key={promo.idPromo} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                    <td className="py-4 px-6 text-gray-400">{index + 1}</td>
+                                    <td className="py-4 px-6">
+                                        {promo.gambar ? (
+                                            <img
+                                                src={getPhotoUrl(promo.gambar)}
+                                                alt={promo.namaPromo}
+                                                className="w-32 h-20 object-cover rounded shadow-sm bg-gray-100"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="w-32 h-20 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500"
+                                            style={{ display: promo.gambar ? 'none' : 'flex' }}
+                                        >
+                                            No Img
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-6 font-medium text-gray-900">{promo.namaPromo}</td>
+                                    <td className="py-4 px-6 text-gray-500">{promo.jenisPromo}</td>
+                                    <td className="py-4 px-6 text-gray-500">{promo.kode}</td>
+                                    <td className="py-4 px-6 text-green-600 font-medium">{promo.diskon}</td>
+                                    <td className="py-4 px-6 text-gray-500 text-xs">
+                                        <div>{formatDate(promo.tanggalMulai)}</div>
+                                        <div className="text-gray-400">s/d</div>
+                                        <div>{formatDate(promo.tanggalSelesai)}</div>
+                                    </td>
+                                    <td className="py-4 px-6 text-gray-900">{formatCurrency(promo.minimalTransaksi)}</td>
+                                    <td className="py-4 px-6 text-center">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(promo.status)}`}>
+                                            {(promo.status === 1 || promo.status === 'Active' || promo.status === true) ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => openEditModal(promo)}
+                                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                                title="Edit"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => openDeleteModal(promo)}
+                                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
@@ -230,9 +334,10 @@ const PromoTable = () => {
 
             <DeleteModal
                 isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
+                onClose={closeDeleteModal}
                 onConfirm={handleDelete}
                 itemType="promo"
+                itemName={selectedPromo?.namaPromo}
             />
         </div>
     );

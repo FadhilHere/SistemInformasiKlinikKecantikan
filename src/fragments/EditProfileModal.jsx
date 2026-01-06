@@ -1,17 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import { apiFetch } from '../lib/api';
 
 const EditProfileModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
-        name: 'Bintang Puspita',
-        email: 'BintangPuspita@gmail.com',
-        birthDate: '1990-01-15',
-        gender: 'Perempuan',
-        whatsapp: '08xx-xxxx-xxxx',
-        address: 'Jl.KlangKubumi',
-        password: 'miauki23',
-        photo: ''
+        name: '',
+        email: '',
+        birthDate: '',
+        gender: '',
+        whatsapp: '',
+        address: '',
+        password: ''
     });
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (!isOpen) return;
+            try {
+                setIsLoading(true);
+                const res = await apiFetch('/api/me');
+                const user = res.data || res;
+                setFormData({
+                    name: user.nama || '',
+                    email: user.email || '',
+                    birthDate: user.tanggalLahir || '',
+                    gender: user.jenisKelamin || '',
+                    whatsapp: user.nomorWa || '',
+                    address: user.alamat || '',
+                    password: '' // Keep empty for security
+                });
+            } catch (err) {
+                console.error('Failed to fetch user info:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchUser();
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -51,7 +77,7 @@ const EditProfileModal = ({ isOpen, onClose }) => {
                         </div>
                         <div className="flex-1">
                             <span className="inline-block px-2 py-1 bg-green-500 text-white text-xs rounded mb-1">Online</span>
-                            <h3 className="font-bold text-gray-900 mb-1">Hallo, Bintang Puspita!</h3>
+                            <h3 className="font-bold text-gray-900 mb-1">Hallo, {formData.name}!</h3>
                             <p className="text-sm text-gray-600">
                                 Anda dapat mengganti dan menyesuaikan dengan kebutuhan. Ayo atur profil Anda sekarang!
                             </p>
@@ -142,49 +168,17 @@ const EditProfileModal = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* Password */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                             <input
                                 type="password"
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                placeholder="miauki23"
+                                placeholder="Isi untuk ubah password"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
-                        </div>
-
-                        {/* Photo Upload */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Foto Profil</label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    id="profile-photo-upload"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => {
-                                                setFormData(prev => ({ ...prev, photo: reader.result }));
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-                                    }}
-                                />
-                                <label
-                                    htmlFor="profile-photo-upload"
-                                    className="px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-900 transition-colors text-sm"
-                                >
-                                    Choose File
-                                </label>
-                                <span className="text-sm text-gray-500">
-                                    {formData.photo ? 'File Selected' : 'No File Choosen'}
-                                </span>
-                            </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Forgot Password Link */}
