@@ -68,8 +68,8 @@ class PromoController extends Controller
             'tanggalSelesai' => 'bail|required|date|after_or_equal:tanggalMulai',
             'minimalTransaksi' => 'bail|required|integer|min:0',
             'status' => 'bail|required|boolean',
-            'idKategori' => 'bail|required|integer|exists:kategoriProduk,idKategori',
-            'idProduk' => 'bail|required|integer|exists:produkKlinik,idProduk',
+            'idKategori' => 'bail|nullable|integer|exists:kategoriProduk,idKategori',
+            'idProduk' => 'bail|nullable|integer|exists:produkKlinik,idProduk',
         ])->validate();
 
         $payload = [
@@ -82,8 +82,8 @@ class PromoController extends Controller
             'tanggalSelesai' => $data['tanggalSelesai'],
             'minimalTransaksi' => $data['minimalTransaksi'],
             'status' => $data['status'],
-            'idKategori' => $data['idKategori'],
-            'idProduk' => $data['idProduk'],
+            'idKategori' => $data['idKategori'] ?? null,
+            'idProduk' => $data['idProduk'] ?? null,
         ];
 
         if ($request->hasFile('gambar')) {
@@ -123,8 +123,8 @@ class PromoController extends Controller
             'tanggalSelesai' => 'bail|sometimes|required|date|after_or_equal:tanggalMulai',
             'minimalTransaksi' => 'bail|sometimes|required|integer|min:0',
             'status' => 'bail|sometimes|required|boolean',
-            'idKategori' => 'bail|sometimes|required|integer|exists:kategoriProduk,idKategori',
-            'idProduk' => 'bail|sometimes|required|integer|exists:produkKlinik,idProduk',
+            'idKategori' => 'bail|sometimes|nullable|integer|exists:kategoriProduk,idKategori',
+            'idProduk' => 'bail|sometimes|nullable|integer|exists:produkKlinik,idProduk',
         ])->validate();
 
         $payload = $data;

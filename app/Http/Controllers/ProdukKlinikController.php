@@ -6,6 +6,7 @@ use App\Models\ProdukKlinik;
 use App\Models\KategoriProduk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\QueryException;
 
@@ -109,6 +110,7 @@ class ProdukKlinikController extends Controller
             'harga' => 'bail|required|integer|min:0',
             'stock' => 'bail|required|integer|min:0',
             'idKategori' => 'bail|required|integer|exists:kategoriproduk,idKategori',
+            'gambar' => 'bail|nullable|image|mimes:jpg,jpeg,png|max:2048',
         ], [
             'nama.required' => 'Nama produk wajib diisi',
             'nama.max' => 'Nama produk maksimal 60 karakter',
@@ -122,16 +124,26 @@ class ProdukKlinikController extends Controller
             'stock.min' => 'Stock tidak boleh negatif',
             'idKategori.required' => 'Kategori produk wajib dipilih',
             'idKategori.exists' => 'Kategori produk tidak valid',
+            'gambar.image' => 'Gambar harus berupa file gambar',
+            'gambar.mimes' => 'Gambar harus berformat jpg, jpeg, atau png',
+            'gambar.max' => 'Ukuran gambar maksimal 2MB',
         ])->validate();
 
         try {
-            $produk = ProdukKlinik::create([
+            $payload = [
                 'nama' => $data['nama'],
                 'deskripsi' => $data['deskripsi'],
                 'harga' => $data['harga'],
                 'stock' => $data['stock'],
                 'idKategori' => $data['idKategori'],
-            ]);
+            ];
+
+            if ($request->hasFile('gambar')) {
+                $path = $request->file('gambar')->store('produk-klinik', 'public');
+                $payload['gambar'] = $path;
+            }
+
+            $produk = ProdukKlinik::create($payload);
 
             // Load relationship
             $produk->load('kategori');
@@ -173,6 +185,7 @@ class ProdukKlinikController extends Controller
             'harga' => 'bail|sometimes|required|integer|min:0',
             'stock' => 'bail|sometimes|required|integer|min:0',
             'idKategori' => 'bail|sometimes|required|integer|exists:kategoriproduk,idKategori',
+            'gambar' => 'bail|sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
         ], [
             'nama.required' => 'Nama produk wajib diisi',
             'nama.max' => 'Nama produk maksimal 60 karakter',
@@ -186,9 +199,20 @@ class ProdukKlinikController extends Controller
             'stock.min' => 'Stock tidak boleh negatif',
             'idKategori.required' => 'Kategori produk wajib dipilih',
             'idKategori.exists' => 'Kategori produk tidak valid',
+            'gambar.image' => 'Gambar harus berupa file gambar',
+            'gambar.mimes' => 'Gambar harus berformat jpg, jpeg, atau png',
+            'gambar.max' => 'Ukuran gambar maksimal 2MB',
         ])->validate();
 
         try {
+            if ($request->hasFile('gambar')) {
+                if (!empty($produk->gambar)) {
+                    Storage::disk('public')->delete($produk->gambar);
+                }
+                $path = $request->file('gambar')->store('produk-klinik', 'public');
+                $data['gambar'] = $path;
+            }
+
             $produk->update($data);
             $produk->load('kategori');
 
@@ -312,6 +336,9 @@ class ProdukKlinikController extends Controller
         }
 
         try {
+            if (!empty($produk->gambar)) {
+                Storage::disk('public')->delete($produk->gambar);
+            }
             $produk->delete();
 
             return response()->json([

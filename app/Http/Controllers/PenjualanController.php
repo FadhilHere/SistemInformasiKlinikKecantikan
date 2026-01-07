@@ -6,6 +6,7 @@ use App\Models\Penjualan;
 use App\Models\DetailPenjualan;
 use App\Models\Keranjang;
 use App\Models\ProdukKlinik;
+use App\Models\Promo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; // Transaction support
@@ -34,7 +35,7 @@ class PenjualanController extends Controller
     {
         try {
             $user = $this->currentUser();
-            
+
             $query = Penjualan::with(['user', 'promo', 'detailpenjualan.produk']);
 
             if (!$this->ensureAdmin()) {
@@ -66,7 +67,7 @@ class PenjualanController extends Controller
     {
         try {
             $user = $this->currentUser();
-            
+
             $penjualan = Penjualan::with(['user', 'promo', 'detailpenjualan.produk'])->find($id);
 
             if (!$penjualan) {
@@ -105,6 +106,13 @@ class PenjualanController extends Controller
     {
         $user = $this->currentUser();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'idPromo' => 'bail|nullable|integer|exists:promo,idPromo',
             'metodePembayaran' => 'bail|nullable|string', // Optional, just for record
@@ -113,9 +121,6 @@ class PenjualanController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
-        // Start DB Transaction to ensure Atomicity
-        DB::beginTransaction();
 
         try {
             // 1. Get Cart Items
@@ -128,10 +133,16 @@ class PenjualanController extends Controller
                 ], 400);
             }
 
+            // Start DB Transaction to ensure Atomicity
+            DB::beginTransaction();
+
             // 2. Calculate Total & Validate Stock
             $totalHarga = 0;
-            
+
             foreach ($cartItems as $item) {
+                if (!$item->produk) {
+                    throw new \Exception('Produk tidak ditemukan di keranjang');
+                }
                 // Stock Check
                 if ($item->produk->stock < $item->jumlahProduk) {
                     throw new \Exception("Stock produk '{$item->produk->nama}' tidak mencukupi. Sisa: {$item->produk->stock}");
@@ -142,15 +153,39 @@ class PenjualanController extends Controller
             }
 
             // TODO: Apply Promo Logic Calculation Here if needed
-            // Untuk sekarang kita pakai totalHarga raw
+            $promo = null;
+            $totalDiskon = 0;
+
+            if (!empty($request->idPromo)) {
+                $promo = Promo::find($request->idPromo);
+
+                if (!$promo || !$promo->status) {
+                    throw new \Exception('Promo tidak aktif atau tidak ditemukan');
+                }
+
+                $today = now()->toDateString();
+                if ($promo->tanggalMulai > $today || $promo->tanggalSelesai < $today) {
+                    throw new \Exception('Promo sudah tidak berlaku');
+                }
+
+                if ($totalHarga < $promo->minimalTransaksi) {
+                    throw new \Exception('Minimal transaksi untuk promo belum terpenuhi');
+                }
+
+                // Asumsi diskon berupa persentase 0-100
+                $diskonPersen = min(max((int) $promo->diskon, 0), 100);
+                $totalDiskon = (int) floor($totalHarga * ($diskonPersen / 100));
+            }
+
+            $totalBayar = max($totalHarga - $totalDiskon, 0);
 
             // 3. Create Penjualan Header
             $penjualan = Penjualan::create([
                 'tanggal' => now(),
-                'totalHarga' => $totalHarga,
+                'totalHarga' => $totalBayar,
                 'status' => 'pending', // Default status
                 'idUser' => $user->idUser,
-                'idPromo' => $request->idPromo, // Nullable logic
+                'idPromo' => $request->idPromo ?? null, // Nullable logic
             ]);
 
             // 4. Create Detail & Update Stock
@@ -174,12 +209,18 @@ class PenjualanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Transaksi berhasil dibuat',
-                'data' => $penjualan->load('detailpenjualan')
+                'data' => $penjualan->load('detailpenjualan'),
+                'summary' => [
+                    'totalHarga' => $totalHarga,
+                    'totalDiskon' => $totalDiskon,
+                    'totalBayar' => $totalBayar,
+                    'idPromo' => $promo?->idPromo,
+                ],
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack(); // Revert all changes if any error occurs
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transaksi gagal: ' . $e->getMessage(),
@@ -197,10 +238,11 @@ class PenjualanController extends Controller
         }
 
         $penjualan = Penjualan::find($id);
-        if (!$penjualan) return response()->json(['message' => 'Not Found'], 404);
+        if (!$penjualan)
+            return response()->json(['message' => 'Not Found'], 404);
 
         $request->validate([
-            'status' => 'required|string|in:pending,paid,shipped,completed,cancelled'
+            'status' => 'required|string|in:pending,processing,completed,cancelled'
         ]);
 
         $penjualan->update(['status' => $request->status]);

@@ -22,7 +22,7 @@ class Penjualan extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'idUser');
+        return $this->belongsTo(users::class, 'idUser');
     }
 
     public function promo()

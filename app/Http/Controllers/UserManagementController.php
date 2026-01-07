@@ -170,4 +170,37 @@ class UserManagementController extends Controller
             'message' => 'User dihapus',
         ]);
     }
+
+    public function updateSelf(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $data = Validator::make($request->all(), [
+            'nama' => 'bail|sometimes|required|string|max:255',
+            'alamat' => 'bail|sometimes|nullable|string|max:255',
+            'jenisKelamin' => 'bail|sometimes|nullable|string|max:20',
+            'tanggalLahir' => 'bail|sometimes|nullable|date',
+            'email' => 'bail|sometimes|required|email:rfc,dns|unique:user,email,' . $user->idUser . ',idUser',
+            'nomorWa' => 'bail|sometimes|nullable|string|max:20',
+            'password' => 'bail|sometimes|required|string|min:6',
+        ])->validate();
+
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'success' => true,
+            'data' => $user,
+        ]);
+    }
 }

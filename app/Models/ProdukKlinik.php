@@ -17,7 +17,8 @@ class ProdukKlinik extends Model
         'deskripsi',
         'harga',
         'stock',
-        'idKategori'
+        'idKategori',
+        'gambar'
     ];
 
     public function kategori() {

@@ -31,30 +31,46 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:api')->group(function () {
+
+    Route::post('/produk-klinik', [ProdukKlinikController::class, 'store']);
+    Route::put('/produk-klinik/{id}', [ProdukKlinikController::class, 'update']);
+    Route::delete('/produk-klinik/{id}', [ProdukKlinikController::class, 'destroy']);
+
+    Route::post('/testimoni', [TestimoniController::class, 'store']);
+    Route::put('/testimoni/{id}', [TestimoniController::class, 'update']);
+    Route::delete('/testimoni/{id}', [TestimoniController::class, 'destroy']);
+
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/keranjang', [KeranjangController::class, 'index']);
+    Route::post('/keranjang', [KeranjangController::class, 'store']);
+    Route::put('/keranjang/{id}', [KeranjangController::class, 'update']);
+    Route::delete('/keranjang/clear', [KeranjangController::class, 'clear']);
+    Route::delete('/keranjang/{id}', [KeranjangController::class, 'destroy']);
 
     // --- EXISTING ROUTES ---
 
     // CRUD profil dokter - hanya admin (dicek di controller)
-   
+
     Route::post('/profil-dokter', [ProfilDokterController::class, 'store']);
     Route::put('/profil-dokter/{id}', [ProfilDokterController::class, 'update']);
     Route::delete('/profil-dokter/{id}', [ProfilDokterController::class, 'destroy']);
 
     // CRUD jadwal reservasi - hanya admin (dicek di controller)
-   
+
     Route::post('/jadwal-reservasi', [JadwalReservasiController::class, 'store']);
     Route::put('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'update']);
     Route::delete('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'destroy']);
 
     // CRUD reservasi - admin bisa semua, pelanggan hanya miliknya (dicek di controller)
- 
+
     Route::post('/reservasi', [ReservasiController::class, 'store']);
     Route::put('/reservasi/{id}', [ReservasiController::class, 'update']);
     Route::delete('/reservasi/{id}', [ReservasiController::class, 'destroy']);
 
     // CRUD user - hanya admin (dicek di controller)
+    Route::put('/users/me', [UserManagementController::class, 'updateSelf']);
     Route::get('/users', [UserManagementController::class, 'index']);
     Route::get('/users/{id}', [UserManagementController::class, 'show']);
     Route::post('/users', [UserManagementController::class, 'store']);
@@ -71,19 +87,26 @@ Route::middleware('auth:api')->group(function () {
     // --- OTHER TEAM MEMBERS ROUTES ---
 
     // CRUD event - hanya admin (dicek di controller)
- 
+
     Route::post('/event', [EventController::class, 'store']);
     Route::put('/event/{id}', [EventController::class, 'update']);
     Route::delete('/event/{id}', [EventController::class, 'destroy']);
 
+    Route::get('/penjualan', [PenjualanController::class, 'index']);
+    Route::post('/penjualan/checkout', [PenjualanController::class, 'checkout']);
+    Route::post('/penjualan', [PenjualanController::class, 'store']);
+    Route::put('/penjualan/{id}', [PenjualanController::class, 'update']);
+    Route::put('/penjualan/{id}/status', [PenjualanController::class, 'updateStatus']);
+    Route::delete('/penjualan/{id}', [PenjualanController::class, 'destroy']);
+
     // CRUD kegiatan - hanya admin (dicek di controller)
- 
+
     Route::post('/kegiatan', [KegiatanController::class, 'store']);
     Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']);
     Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
 
     // CRUD promo - hanya admin (dicek di controller)
-    
+
     Route::post('/promo', [PromoController::class, 'store']);
     Route::put('/promo/{id}', [PromoController::class, 'update']);
     Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
