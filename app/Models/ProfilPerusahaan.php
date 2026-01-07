@@ -20,6 +20,7 @@ class ProfilPerusahaan extends Model
         'misi',
         'deskripsiPerusahaan',
         'nomorCustomerService',
+        'gambar',
         'jamBukak',
         'jamKeluar'
     ];
