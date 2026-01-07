@@ -44,12 +44,23 @@ const ProductTable = () => {
         fetchCategories();
     }, []);
 
+    const buildFormData = (payload) => {
+        const formData = new FormData();
+        if (payload.nama) formData.append('nama', payload.nama);
+        if (payload.harga !== undefined && payload.harga !== '') formData.append('harga', payload.harga);
+        if (payload.stock !== undefined && payload.stock !== '') formData.append('stock', payload.stock);
+        if (payload.idKategori) formData.append('idKategori', payload.idKategori);
+        if (payload.deskripsi) formData.append('deskripsi', payload.deskripsi);
+        if (payload.gambarFile) formData.append('gambar', payload.gambarFile);
+        return formData;
+    };
+
     const handleAdd = async (newProduct) => {
         try {
+            const formData = buildFormData(newProduct);
             await apiFetch('/api/produk-klinik', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newProduct),
+                body: formData,
             });
             setIsAddModalOpen(false);
             await fetchProducts();
@@ -61,10 +72,11 @@ const ProductTable = () => {
     const handleEdit = async (updatedProduct) => {
         if (!selectedProduct) return;
         try {
+            const formData = buildFormData(updatedProduct);
+            formData.append('_method', 'PUT');
             await apiFetch(`/api/produk-klinik/${selectedProduct.idProduk || selectedProduct.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedProduct),
+                method: 'POST',
+                body: formData,
             });
             closeEditModal();
             await fetchProducts();
@@ -115,7 +127,7 @@ const ProductTable = () => {
 
     const updateStock = async (product, change) => {
         try {
-            const currentStock = product.stok || product.stock || 0;
+            const currentStock = product.stok ?? product.stock ?? 0;
             const newStock = currentStock + change;
             if (newStock < 0) {
                 setError('Stok tidak boleh negatif');
@@ -125,15 +137,16 @@ const ProductTable = () => {
             const payload = {
                 nama: product.nama,
                 harga: product.harga,
-                stok: newStock,
+                stock: newStock,
                 idKategori: product.idKategori,
                 deskripsi: product.deskripsi
             };
 
+            const formData = buildFormData(payload);
+            formData.append('_method', 'PUT');
             await apiFetch(`/api/produk-klinik/${product.idProduk || product.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                method: 'POST',
+                body: formData,
             });
 
             await fetchProducts();
@@ -273,7 +286,7 @@ const ProductTable = () => {
                                     <td className="py-4 px-6 text-gray-500 max-w-xs truncate">{product.deskripsi}</td>
                                     <td className="py-4 px-6 text-gray-500">{getCategoryName(product.idKategori)}</td>
                                     <td className="py-4 px-6 text-gray-900 font-medium">{formatPrice(product.harga)}</td>
-                                    <td className="py-4 px-6 text-center text-gray-600">{product.stok || product.stock}</td>
+                                    <td className="py-4 px-6 text-center text-gray-600">{product.stok ?? product.stock ?? 0}</td>
                                     <td className="py-4 px-6">
                                         <div className="flex items-center justify-center gap-4">
                                             <button

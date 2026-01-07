@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
-import { apiFetch } from '../lib/api'
+import { apiFetch, API_BASE_URL } from '../lib/api'
 
-// Helper to generate a consistent placeholder image based on ID (copied from ProductsPage for consistency)
-const getProductImage = (id) => {
+// Helper to generate a consistent placeholder image based on product data
+const getProductImage = (product) => {
+  if (product?.gambar) {
+    return product.gambar.startsWith('http')
+      ? product.gambar
+      : `${API_BASE_URL}/storage/${product.gambar}`
+  }
   const images = [
     'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=600&q=80',
     'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80',
@@ -13,8 +18,8 @@ const getProductImage = (id) => {
     'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80',
     'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=600&q=80'
   ]
-  if (!id) return images[0]
-  return images[id % images.length] || images[0]
+  const fallbackId = product?.idProduk ?? product?.id ?? 0
+  return images[fallbackId % images.length] || images[0]
 }
 
 const ProductDetailPage = ({ isLoggedIn }) => {
@@ -65,8 +70,20 @@ const ProductDetailPage = ({ isLoggedIn }) => {
   }, [id])
 
   const handleCreateOrder = async () => {
-    // Placeholder for cart/order logic
-    alert(`Berhasil menambahkan ${quantity} items ke keranjang!`)
+    try {
+      await apiFetch('/api/keranjang', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idProduk: product?.idProduk ?? product?.id,
+          jumlahProduk: quantity
+        })
+      })
+      alert(`Berhasil menambahkan ${quantity} items ke keranjang!`)
+      navigate('/cart')
+    } catch (error) {
+      alert(error?.data?.message || error?.message || 'Gagal menambahkan ke keranjang.')
+    }
   }
 
   const handleQuantityChange = (delta) => {
@@ -74,7 +91,8 @@ const ProductDetailPage = ({ isLoggedIn }) => {
         const newVal = prev + delta
         if (newVal < 1) return 1
         // Optional: Check stock limit
-        if (product && product.stock && newVal > product.stock) return product.stock
+        const limit = product?.stock ?? product?.stok
+        if (limit && newVal > limit) return limit
         return newVal
     })
   }
@@ -104,7 +122,7 @@ const ProductDetailPage = ({ isLoggedIn }) => {
             <Navbar isLoggedIn={isLoggedIn} />
             <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
                 <p className="text-xl text-red-500">{error || 'Produk tidak ditemukan'}</p>
-                <Button onClick={() => navigate('/products')}>Kembali ke Katalog</Button>
+                <Button onClick={() => navigate('/product')}>Kembali ke Katalog</Button>
             </div>
         </div>
     )
@@ -121,7 +139,7 @@ const ProductDetailPage = ({ isLoggedIn }) => {
             {/* Image Column */}
             <div className="flex w-full shrink-0 items-center justify-center md:w-1/3 lg:w-[400px]">
                 <img 
-                    src={getProductImage(product.idProduk)} 
+                    src={getProductImage(product)} 
                     alt={product.nama} 
                     className="max-h-[300px] object-contain md:max-h-[400px]" 
                 />
@@ -179,12 +197,12 @@ const ProductDetailPage = ({ isLoggedIn }) => {
                     {relatedProducts.map((item) => (
                         <div 
                             key={item.idProduk}
-                            onClick={() => navigate(`/products/${item.idProduk}`)}
+                            onClick={() => navigate(`/product/${item.idProduk}`)}
                             className="group cursor-pointer rounded-t-[32px] rounded-br-[32px] bg-white p-6 shadow-card transition hover:shadow-xl"
                         >
                              <div className="mb-6 flex justify-center">
                                 <img 
-                                    src={getProductImage(item.idProduk)} 
+                                    src={getProductImage(item)} 
                                     alt={item.nama}
                                     className="h-40 object-contain transition group-hover:scale-105" 
                                 />

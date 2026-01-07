@@ -9,7 +9,12 @@ const FIELD_CONFIG = [
   { name: 'email', label: 'Email', placeholder: 'Email', type: 'email' },
   { name: 'nomorWa', label: 'Nomor WhatsApp', placeholder: '08xxxxxxxxxx' },
   { name: 'alamat', label: 'Alamat', placeholder: 'Alamat domisili' },
-  { name: 'jenisKelamin', label: 'Jenis Kelamin', placeholder: 'Pria/Wanita' },
+  {
+    name: 'jenisKelamin',
+    label: 'Jenis Kelamin',
+    type: 'radio',
+    options: ['Laki-laki', 'Perempuan']
+  },
   { name: 'tanggalLahir', label: 'Tanggal Lahir', type: 'date' },
   // { name: 'role', label: 'Role', placeholder: 'user' },
   {
@@ -105,16 +110,40 @@ const RegistrationForm = () => {
         className="grid grid-cols-1 gap-5 md:grid-cols-2"
       >
         {FIELD_CONFIG.map((field) => (
-          <InputField
-            key={field.name}
-            label={field.label}
-            placeholder={field.placeholder}
-            type={field.type}
-            name={field.name}
-            value={formValues[field.name]}
-            onChange={handleChange}
-            allowToggle={field.allowToggle}
-          />
+          field.type === 'radio' ? (
+            <div key={field.name} className="flex flex-col gap-3 text-[15px] font-medium text-brand/80">
+              <span>{field.label}</span>
+              <div className="flex gap-6 items-center min-h-[50px]">
+                {field.options.map(opt => (
+                  <label key={opt} className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+                    <div className="relative flex items-center">
+                      <input
+                        type="radio"
+                        name={field.name}
+                        value={opt}
+                        checked={formValues[field.name] === opt}
+                        onChange={handleChange}
+                        className="peer appearance-none h-5 w-5 rounded-full border-2 border-brand/40 checked:border-brand checked:bg-brand transition-all"
+                      />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white scale-0 peer-checked:scale-100 transition-transform pointer-events-none"></div>
+                    </div>
+                    <span className="text-brand font-normal text-base">{opt}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <InputField
+              key={field.name}
+              label={field.label}
+              placeholder={field.placeholder}
+              type={field.type}
+              name={field.name}
+              value={formValues[field.name]}
+              onChange={handleChange}
+              allowToggle={field.allowToggle}
+            />
+          )
         ))}
 
         {statusMessage && (

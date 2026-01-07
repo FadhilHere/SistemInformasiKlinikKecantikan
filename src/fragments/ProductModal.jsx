@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
-import { apiFetch } from '../lib/api';
+import { apiFetch, API_BASE_URL } from '../lib/api';
 
 const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
         nama: '',
         harga: '',
-        stok: '',
+        stock: '',
         idKategori: '',
-        deskripsi: ''
+        deskripsi: '',
+        gambar: '',
+        gambarFile: null
     });
     const [categories, setCategories] = useState([]);
     const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -36,20 +38,31 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
 
     useEffect(() => {
         if (isOpen && mode === 'edit' && initialData) {
+            let imageUrl = '';
+            if (initialData.gambar) {
+                imageUrl = initialData.gambar.startsWith('http')
+                    ? initialData.gambar
+                    : `${API_BASE_URL}/storage/${initialData.gambar}`;
+            }
+
             setFormData({
-                nama: initialData.nama || '',
-                harga: initialData.harga || '',
-                stok: initialData.stok || initialData.stock || '',
-                idKategori: initialData.idKategori || '',
-                deskripsi: initialData.deskripsi || ''
+                nama: initialData.nama ?? '',
+                harga: initialData.harga ?? '',
+                stock: initialData.stock ?? initialData.stok ?? '',
+                idKategori: initialData.idKategori ?? '',
+                deskripsi: initialData.deskripsi ?? '',
+                gambar: imageUrl,
+                gambarFile: null
             });
         } else if (isOpen && mode === 'add') {
             setFormData({
                 nama: '',
                 harga: '',
-                stok: '',
+                stock: '',
                 idKategori: '',
-                deskripsi: ''
+                deskripsi: '',
+                gambar: '',
+                gambarFile: null
             });
         }
     }, [isOpen, mode, initialData]);
@@ -116,8 +129,8 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
                             <label className="text-sm font-medium text-gray-700">Stok</label>
                             <input
                                 type="number"
-                                name="stok"
-                                value={formData.stok}
+                                name="stock"
+                                value={formData.stock}
                                 onChange={handleChange}
                                 placeholder="Jumlah Stok"
                                 required
@@ -161,6 +174,40 @@ const ProductModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) 
                             rows="4"
                             className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
                         ></textarea>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Gambar Produk</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                id="product-image-upload"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setFormData(prev => ({ ...prev, gambar: reader.result, gambarFile: file }));
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                            <label
+                                htmlFor="product-image-upload"
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors text-sm border border-gray-200"
+                            >
+                                Choose File
+                            </label>
+                            <span className="text-sm text-gray-500">
+                                {formData.gambar ? 'File Selected' : 'No File Chosen'}
+                            </span>
+                        </div>
+                        {formData.gambar && (
+                            <img src={formData.gambar} alt="Preview Produk" className="mt-2 h-24 w-24 rounded-lg border border-gray-200 object-cover" />
+                        )}
                     </div>
 
                     <div className="flex justify-end pt-4">

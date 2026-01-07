@@ -18,7 +18,52 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
     const [schedules, setSchedules] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(false);
 
-    // ... useEffect for data fetching ... (customers fetch might be removable if not used elsewhere, but let's leave it for now or remove if unused)
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+    };
+
+    const normalizeListResponse = (res) => {
+        if (Array.isArray(res)) return res;
+        if (Array.isArray(res?.data)) return res.data;
+        if (Array.isArray(res?.data?.data)) return res.data.data;
+        return [];
+    };
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        let isMounted = true;
+        const fetchData = async () => {
+            setIsLoadingData(true);
+            try {
+                const [customersRes, doctorsRes, schedulesRes] = await Promise.all([
+                    apiFetch('/api/users'),
+                    apiFetch('/api/profil-dokter'),
+                    apiFetch('/api/jadwal-reservasi'),
+                ]);
+
+                if (!isMounted) return;
+
+                setCustomers(normalizeListResponse(customersRes));
+                setDoctors(normalizeListResponse(doctorsRes));
+                const scheduleList = normalizeListResponse(schedulesRes);
+                const sortedSchedules = scheduleList.sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''));
+                setSchedules(sortedSchedules);
+            } catch (err) {
+                console.error('Failed to fetch reservation modal data:', err);
+            } finally {
+                if (isMounted) setIsLoadingData(false);
+            }
+        };
+
+        fetchData();
+        return () => {
+            isMounted = false;
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -168,7 +213,7 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                                 value={formData.tanggalReservasi}
                                 onChange={handleChange}
                                 required
-                                min={new Date().toISOString().split('T')[0]} 
+                                min={new Date().toISOString().split('T')[0]}
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>

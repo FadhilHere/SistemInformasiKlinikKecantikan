@@ -59,9 +59,9 @@ const App = () => {
 
   // Redirect logic after login
   const getLoginRedirect = () => {
-      // Read directly from storage to ensure we have the latest value set by LoginPage
-      const role = localStorage.getItem('role')
-      return role?.toLowerCase() === 'admin' ? '/dashboard' : '/'
+    // Read directly from storage to ensure we have the latest value set by LoginPage
+    const role = localStorage.getItem('role')
+    return role?.toLowerCase() === 'admin' ? '/dashboard' : '/'
   }
 
   return (
@@ -74,7 +74,7 @@ const App = () => {
       <Route path="/profile" element={
         isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /> : <Navigate to="/login" />
       } />
-      
+
       {/* Specific Routes for History */}
       <Route path="/riwayat-reservasi" element={
         isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} initialTab="reservation_history" /> : <Navigate to="/login" />
@@ -85,6 +85,9 @@ const App = () => {
       <Route path="/promo" element={<PromoPage isLoggedIn={isLoggedIn} />} />
       <Route path="/promo-detail" element={<PromoDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/product" element={<ProductsPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/product/:id" element={<ProductDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/products/:id" element={<ProductDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/doctor-detail/:id" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/event" element={<EventPage isLoggedIn={isLoggedIn} />} />
       <Route path="/event/:id" element={<EventDetailPage isLoggedIn={isLoggedIn} />} />
       <Route path="/cart" element={<CartPage isLoggedIn={isLoggedIn} />} />
@@ -92,19 +95,19 @@ const App = () => {
       <Route path="/doctors" element={<DoctorsPage isLoggedIn={isLoggedIn} />} />
       <Route path="/testimonial" element={<TestimonialPage isLoggedIn={isLoggedIn} />} />
       <Route path="/testimonial-detail" element={<TestimonialDetailPage isLoggedIn={isLoggedIn} />} />
-      
+
       {/* Protected Reservation Route */}
       <Route path="/reservation" element={
         isLoggedIn ? (
-             // Redirect admin to admin reservation management page
-             (userRole || localStorage.getItem('role'))?.toLowerCase() === 'admin' 
-             ? <Navigate to="/reservations" /> 
-             : <ReservationPage isLoggedIn={isLoggedIn} />
+          // Redirect admin to admin reservation management page
+          (userRole || localStorage.getItem('role'))?.toLowerCase() === 'admin'
+            ? <Navigate to="/reservations" />
+            : <ReservationPage isLoggedIn={isLoggedIn} />
         ) : <Navigate to="/login" state={{ from: '/reservation' }} />
       } />
-      
+
       <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
-      
+
       {/* Admin Routes */}
       <Route path="/dashboard" element={<AdminRoute><DashboardPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/products" element={<AdminRoute><ProductManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
@@ -118,7 +121,7 @@ const App = () => {
       <Route path="/categories" element={<AdminRoute><ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/testimonials" element={<AdminRoute><TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/clinic-profile" element={<AdminRoute><ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
-      
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

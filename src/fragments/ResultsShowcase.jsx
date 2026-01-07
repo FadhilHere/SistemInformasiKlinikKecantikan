@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import ResultCard from '../components/molecules/ResultCard'
 import Button from '../components/atoms/Button'
 
@@ -34,6 +35,7 @@ const RESULTS = [
 ]
 
 const ResultsShowcase = () => {
+  const navigate = useNavigate()
   const scrollRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -97,7 +99,10 @@ const ResultsShowcase = () => {
       </div>
 
       <div className="mt-8 flex justify-center">
-        <Button className="rounded-full bg-[#8cc63f] px-10 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#7ab332] transition-transform hover:-translate-y-1">
+        <Button
+          className="rounded-full bg-[#8cc63f] px-10 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#7ab332] transition-transform hover:-translate-y-1"
+          onClick={() => navigate('/reservation')}
+        >
           Reservasi Sekarang
         </Button>
       </div>

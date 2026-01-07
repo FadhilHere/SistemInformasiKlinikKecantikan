@@ -194,7 +194,7 @@ const DoctorTable = () => {
                                 <th className="py-4 px-6 font-medium">Photo</th>
                                 <th className="py-4 px-6 font-medium">Email</th>
                                 <th className="py-4 px-6 font-medium">Deskripsi</th>
-                                <th className="py-4 px-6 font-medium">Status</th>
+                                {/* <th className="py-4 px-6 font-medium">Status</th> */}
                                 <th className="py-4 px-6 font-medium text-center">Action</th>
                             </tr>
                         </thead>
@@ -208,13 +208,13 @@ const DoctorTable = () => {
                                     </td>
                                     <td className="py-4 px-6 text-gray-500">{doctor.email}</td>
                                     <td className="py-4 px-6 text-gray-500 max-w-xs truncate">{doctor.deskripsi || doctor.description}</td>
-                                    <td className="py-4 px-6">
+                                    {/* <td className="py-4 px-6">
                                         <div className="flex items-center gap-2">
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusBadgeClass(doctor.status)}`}>
                                                 {doctor.status || '-'}
                                             </span>
                                         </div>
-                                    </td>
+                                    </td> */}
                                     <td className="py-4 px-6">
                                         <div className="flex items-center justify-center gap-4">
                                             <button

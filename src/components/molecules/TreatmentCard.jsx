@@ -1,6 +1,9 @@
 import Button from '../atoms/Button'
 
-const TreatmentCard = ({ name, description, image }) => {
+const TreatmentCard = ({ name, description, image, onClick }) => {
+  const fallbackImage =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='100%25' height='100%25' fill='%23e2e8f0'/><text x='50%25' y='50%25' font-size='22' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>Image%20Unavailable</text></svg>"
+
   return (
     <article className="flex h-[480px] w-[300px] flex-col overflow-hidden rounded-br-[40px] rounded-tl-[40px] bg-white shadow-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
       <div className="h-[45%] w-full overflow-hidden">
@@ -9,6 +12,10 @@ const TreatmentCard = ({ name, description, image }) => {
           alt={name}
           className="h-full w-full object-cover"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null
+            e.currentTarget.src = fallbackImage
+          }}
         />
       </div>
       <div className="flex flex-1 flex-col p-6">
@@ -18,7 +25,10 @@ const TreatmentCard = ({ name, description, image }) => {
           {description}
         </p>
         <div className="mt-auto pt-4">
-          <Button className="w-full rounded-full bg-[#4aa731] py-3 text-sm font-bold text-white hover:bg-[#3d8b28] shadow-button">
+          <Button
+            className="w-full rounded-full bg-[#4aa731] py-3 text-sm font-bold text-white hover:bg-[#3d8b28] shadow-button"
+            onClick={onClick}
+          >
             Lihat Selengkapnya
           </Button>
         </div>

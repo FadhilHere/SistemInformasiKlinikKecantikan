@@ -50,7 +50,7 @@ const SalesTable = () => {
     const handleUpdateStatus = async (formData) => {
         if (!selectedSale) return;
         try {
-            await apiFetch(`/api/penjualan/${selectedSale.idPenjualan || selectedSale.id}`, {
+            await apiFetch(`/api/penjualan/${selectedSale.idPenjualan || selectedSale.id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: formData.status }),

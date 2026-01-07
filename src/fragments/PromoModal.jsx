@@ -12,7 +12,7 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
         tanggalMulai: '',
         tanggalSelesai: '',
         minimalTransaksi: '',
-        status: 'Active',
+        status: '1',
         idKategori: '',
         idProduk: '',
         gambar: null
@@ -50,7 +50,7 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                     tanggalSelesai: initialData.tanggalSelesai ? initialData.tanggalSelesai.substring(0, 10) : '',
                     minimalTransaksi: initialData.minimalTransaksi || '',
                     // Convert boolean/int status from backend to string for form select
-                    status: (initialData.status === 1 || initialData.status === true || initialData.status === 'Active') ? 'Active' : 'Inactive',
+                    status: (initialData.status === 1 || initialData.status === true || initialData.status === 'Active') ? '1' : '0',
                     idKategori: initialData.idKategori || '',
                     idProduk: initialData.idProduk || '',
                     gambar: null
@@ -70,7 +70,7 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                     tanggalMulai: '',
                     tanggalSelesai: '',
                     minimalTransaksi: '',
-                    status: 'Active',
+                    status: '1',
                     idKategori: '',
                     idProduk: '',
                     gambar: null
@@ -169,7 +169,9 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                             <select name="idKategori" value={formData.idKategori} onChange={handleChange} className={`${inputClass} appearance-none`}>
                                 <option value="">Pilih Kategori</option>
                                 {categories.map(cat => (
-                                    <option key={cat.idKategori} value={cat.idKategori}>{cat.nama}</option>
+                                    <option key={cat.idKategori || cat.id} value={cat.idKategori || cat.id}>
+                                        {cat.namaKategori || cat.nama || cat.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -198,7 +200,7 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className={labelClass}>Minimal Transaksi</label>
-                            <input type="number" name="minimalTransaksi" value={formData.minimalTransaksi} onChange={handleChange} placeholder="Contoh: 100000" className={inputClass} />
+                            <input type="number" min="0" name="minimalTransaksi" value={formData.minimalTransaksi} onChange={handleChange} placeholder="Contoh: 100000" className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Kode Promo</label>
@@ -208,14 +210,14 @@ const PromoModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) =>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className={labelClass}>Diskon (Nominal/Persen)</label>
-                            <input type="text" name="diskon" value={formData.diskon} onChange={handleChange} placeholder="Contoh: 10% atau 50000" className={inputClass} required />
+                            <label className={labelClass}>Diskon</label>
+                            <input type="number" min="0" name="diskon" value={formData.diskon} onChange={handleChange} placeholder="Contoh: 10" className={inputClass} required />
                         </div>
                         <div>
                             <label className={labelClass}>Status</label>
                             <select name="status" value={formData.status} onChange={handleChange} className={`${inputClass} appearance-none`}>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
                             </select>
                         </div>
                     </div>

@@ -26,6 +26,9 @@ const SLIDES = [
   }
 ]
 
+const FALLBACK_IMAGE =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='720'><rect width='100%25' height='100%25' fill='%23e2e8f0'/><text x='50%25' y='50%25' font-size='28' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'>Image%20Unavailable</text></svg>"
+
 const HeroSection = () => {
   const navigate = useNavigate()
   const [currentIndex, setCurrentIndex] = useState(1)
@@ -131,6 +134,10 @@ const HeroSection = () => {
                     src={slide.image}
                     alt={slide.title}
                     className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null
+                      e.currentTarget.src = FALLBACK_IMAGE
+                    }}
                   />
                 </div>
                 <div className="absolute inset-y-12 left-1/2 h-[80%] w-3/4 -translate-x-1/2 rounded-[48px] bg-white/20 blur-3xl" />

@@ -14,122 +14,148 @@ const ChartCard = ({ title, subtitle, children, className = "" }) => (
 );
 
 // 1. Vertical Bar Chart (Customer Perbulan)
-const CustomerBarChart = () => {
+const CustomerBarChart = ({ data = [], isLoading }) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    // Mock data based on design: Feb is high, others are empty/low
-    const data = [0.1, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const maxValue = Math.max(1, ...data);
+    const normalized = data.map((value) => value / maxValue);
 
     return (
         <div className="w-full h-64 flex items-end justify-between gap-2 pl-8 pb-6 relative border-b border-l border-gray-200">
             {/* Y-Axis Labels */}
             <div className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-[10px] text-gray-400 py-1">
-                <span>1</span>
-                <span>0.8</span>
-                <span>0.6</span>
-                <span>0.4</span>
-                <span>0.2</span>
+                <span>{maxValue}</span>
+                <span>{Math.round(maxValue * 0.8)}</span>
+                <span>{Math.round(maxValue * 0.6)}</span>
+                <span>{Math.round(maxValue * 0.4)}</span>
+                <span>{Math.round(maxValue * 0.2)}</span>
                 <span>0</span>
             </div>
 
             {months.map((m, i) => (
-                <div key={m} className="flex-1 flex flex-col justify-end items-center h-full group">
+                <div key={m} className="flex-1 flex flex-col justify-end items-center h-full group relative">
                     <div
                         className="w-full max-w-[24px] bg-primary rounded-t-sm transition-all duration-500 hover:bg-primary-dark"
-                        style={{ height: `${data[i] * 100}%` }}
+                        style={{ height: `${(normalized[i] || 0) * 100}%` }}
                     ></div>
+                    <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-black/70 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                        {m}: {data[i] || 0}
+                    </div>
                     <span className="text-[10px] text-gray-400 mt-2 rotate-0 text-center">{m}</span>
                 </div>
             ))}
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                    loading...
+                </div>
+            )}
         </div>
     );
 };
 
 // 2. Horizontal Bar Chart (Produk Terlaris)
-const ProductHorizontalChart = () => {
-    const products = [
-        { name: 'Acne', value: 56635, max: 80000 },
-        { name: 'Whitening', value: 74779, max: 80000 },
-        { name: 'Anti - Aging', value: 19027, max: 80000 },
-        { name: 'Flimming', value: 43887, max: 80000 },
-        { name: 'Serum', value: 8142, max: 80000 },
-    ];
+const ProductHorizontalChart = ({ data = [], isLoading }) => {
+    const maxValue = Math.max(1, ...data.map((item) => item.value || 0));
 
     return (
         <div className="w-full flex flex-col gap-6">
-            {products.map((p) => (
-                <div key={p.name} className="flex items-center gap-4 text-xs">
-                    <span className="w-20 text-right text-gray-500">{p.name}</span>
+            {data.length === 0 && !isLoading && (
+                <div className="text-sm text-gray-400 text-center">Belum ada data produk.</div>
+            )}
+            {data.map((p) => (
+                <div key={p.name} className="flex items-center gap-4 text-xs group relative">
+                    <span className="w-24 text-right text-gray-500">{p.name}</span>
                     <div className="flex-1 h-5 bg-gray-50 rounded-r-md relative">
                         <div
                             className="bg-primary h-full rounded-r-md flex items-center justify-end px-2 text-white text-[10px]"
-                            style={{ width: `${(p.value / p.max) * 100}%` }}
+                            style={{ width: `${(p.value / maxValue) * 100}%` }}
                         >
                         </div>
                     </div>
                     <span className="w-12 text-gray-400">{p.value.toLocaleString()}</span>
+                    <div className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded bg-black/70 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                        {p.name}: {p.value.toLocaleString()}
+                    </div>
                 </div>
             ))}
             {/* X-Axis Scale */}
-            <div className="flex justify-between pl-24 pr-12 text-[10px] text-gray-400">
-                <span>0</span>
-                <span>20K</span>
-                <span>40K</span>
-                <span>60K</span>
-                <span>80K</span>
-            </div>
+            {data.length > 0 && (
+                <div className="flex justify-between pl-28 pr-12 text-[10px] text-gray-400">
+                    <span>0</span>
+                    <span>{Math.round(maxValue * 0.25)}</span>
+                    <span>{Math.round(maxValue * 0.5)}</span>
+                    <span>{Math.round(maxValue * 0.75)}</span>
+                    <span>{maxValue}</span>
+                </div>
+            )}
+            {isLoading && (
+                <div className="text-center text-sm text-gray-400">loading...</div>
+            )}
         </div>
     );
 };
 
 // 3. Pie Chart (Reservasi Treatment) - Pure CSS Conic Gradient
-const ReservationPieChart = () => {
-    // Segments based on visual check of design
-    const segments = [
-        { label: 'Bopeng', color: '#68d391', percent: 35, start: 0 },   // Light Green
-        { label: 'Bopeng', color: '#48bb78', percent: 25, start: 35 },   // Med Green
-        { label: 'Bopeng', color: '#2f855a', percent: 20, start: 60 },   // Dark Green
-        { label: 'Bopeng', color: '#006400', percent: 20, start: 80 },   // Darker Green
-    ];
-
-    // Build conic gradient string
-    // format: color start% end%, color start% end%, ...
+const ReservationPieChart = ({ data = [], isLoading }) => {
+    const colors = ['#68d391', '#48bb78', '#2f855a', '#006400', '#7ccf8a', '#3aa655'];
+    const total = data.reduce((sum, item) => sum + (item.value || 0), 0);
     let gradientParts = [];
     let currentPos = 0;
-    segments.forEach(seg => {
-        gradientParts.push(`${seg.color} ${currentPos}% ${currentPos + seg.percent}%`);
-        currentPos += seg.percent;
+    data.forEach((seg, index) => {
+        const percent = total > 0 ? (seg.value / total) * 100 : 0;
+        const color = colors[index % colors.length];
+        gradientParts.push(`${color} ${currentPos}% ${currentPos + percent}%`);
+        currentPos += percent;
     });
 
     return (
-        <div className="relative w-64 h-64">
-            <div
-                className="w-full h-full rounded-full"
-                style={{ background: `conic-gradient(${gradientParts.join(', ')})` }}
-            ></div>
+        <>
+            <div className="relative w-64 h-64">
+                <div
+                    className="w-full h-full rounded-full"
+                    style={{ background: total > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#f3f4f6' }}
+                ></div>
 
-            {/* Labels overlay - manual positioning to mimic design labels inside slices */}
-            <div className="absolute inset-0 pointer-events-none text-white text-xs font-medium">
-                <div className="absolute top-[20%] left-[30%] -rotate-45">Bopeng</div>
-                <div className="absolute top-[40%] right-[20%] rotate-12">Bopeng</div>
-                <div className="absolute bottom-[25%] right-[30%] rotate-45">Bopeng</div>
-                <div className="absolute bottom-[20%] left-[25%] -rotate-45">Bopeng</div>
+                {total === 0 && !isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                        Belum ada data.
+                    </div>
+                )}
+                {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                        loading...
+                    </div>
+                )}
             </div>
-        </div>
+            {data.length > 0 && (
+                <div className="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600">
+                    {data.map((item, index) => (
+                        <div key={`${item.label}-${index}`} className="flex items-center gap-2">
+                            <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: colors[index % colors.length] }}
+                            />
+                            <span title={`${item.label}: ${item.value}`}>
+                                {item.label} ({item.value})
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </>
     );
 };
 
 // 4. Line Chart (Grafik Penjualan) - SVG Polyline
-const SalesLineChart = () => {
-    // Smooth curve approximation
-    const points = [
-        [0, 80], [10, 85], [20, 70], [30, 90], [40, 40], [50, 60], [60, 50], [70, 40], [80, 70],
-        [90, 85], [100, 75], [110, 70], [120, 60], [130, 40], [140, 20]
-    ];
-
-    // Normalize points to SVG coordinate space roughly 0-100
-    // Visual trace: Starts mid-low, goes up and down multiple times
-    // Using a simpler path for demo
-    const pathData = "M0,100 C20,100 30,80 40,90 S60,40 70,50 S90,60 100,40 S120,70 130,80 S150,90 160,85 S180,80 190,60 S210,30 220,50 S240,40 250,10";
+const SalesLineChart = ({ data = [], isLoading }) => {
+    const maxValue = Math.max(1, ...data);
+    const height = 100;
+    const width = 240;
+    const step = data.length > 1 ? width / (data.length - 1) : width;
+    const points = data.map((value, index) => {
+        const x = index * step;
+        const y = height - (value / maxValue) * height;
+        return `${x},${y}`;
+    }).join(' ');
 
     return (
         <div className="w-full flex flex-col h-full">
@@ -141,15 +167,47 @@ const SalesLineChart = () => {
                     ))}
 
                     {/* The Chart Line */}
-                    <path
-                        d={pathData}
-                        fill="none"
-                        stroke="#008000"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
+                    {data.length > 0 && (
+                        <polyline
+                            points={points}
+                            fill="none"
+                            stroke="#008000"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    )}
                 </svg>
+                {data.length > 0 && (
+                    <div className="absolute inset-0">
+                        {data.map((value, index) => {
+                            const x = (index * step / 250) * 100;
+                            const y = ((height - (value / maxValue) * height) / 120) * 100;
+                            return (
+                                <div
+                                    key={`${index}-${value}`}
+                                    className="group absolute"
+                                    style={{ left: `${x}%`, top: `${y}%` }}
+                                >
+                                    <div className="h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#008000]" />
+                                    <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-black/70 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
+                                        {value.toLocaleString()}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                {data.length === 0 && !isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                        Belum ada data.
+                    </div>
+                )}
+                {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                        loading...
+                    </div>
+                )}
             </div>
 
             {/* Filter Buttons */}
@@ -167,23 +225,23 @@ const SalesLineChart = () => {
     );
 };
 
-const DashboardCharts = () => {
+const DashboardCharts = ({ isLoading = false, customerMonthly = [], topProducts = [], reservationByTreatment = [], salesMonthly = [] }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
             <ChartCard title="Grafik Customer Perbulan" subtitle="Keterangan Dari Customer Perbulan">
-                <CustomerBarChart />
+                <CustomerBarChart data={customerMonthly} isLoading={isLoading} />
             </ChartCard>
 
             <ChartCard title="Produk Terlaris" subtitle="produk dengan penjualan tertinggi">
-                <ProductHorizontalChart />
+                <ProductHorizontalChart data={topProducts} isLoading={isLoading} />
             </ChartCard>
 
             <ChartCard title="Reservasi Treatment" subtitle="treatment yang paling banyak diminati">
-                <ReservationPieChart />
+                <ReservationPieChart data={reservationByTreatment} isLoading={isLoading} />
             </ChartCard>
 
             <ChartCard title="Grafik Penjualan Perbulan" subtitle="Melihat Pertumbuhan Bisnis">
-                <SalesLineChart />
+                <SalesLineChart data={salesMonthly} isLoading={isLoading} />
             </ChartCard>
         </div>
     );

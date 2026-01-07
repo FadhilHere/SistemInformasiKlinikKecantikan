@@ -89,10 +89,37 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
     )
 }
 
+const SuccessModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-[40px] bg-white p-8 text-center shadow-2xl">
+                <div className="mb-6 flex justify-center">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-[#53c41a]">
+                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+                <h3 className="mb-4 text-2xl font-bold text-gray-800">
+                    Reservasi Berhasil!
+                </h3>
+                <p className="mb-8 text-gray-600">
+                    Terima kasih telah melakukan reservasi. Kami menantikan kehadiran Anda.
+                </p>
+                <div className="flex justify-center">
+                    <button onClick={onClose} className="min-w-[120px] rounded-xl bg-[#53c41a] px-6 py-3 font-bold text-white transition hover:bg-[#4aa731]">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const ReservationPage = ({ isLoggedIn }) => {
     const [bookingStep, setBookingStep] = useState('schedule') // 'schedule' | 'detail'
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [showModal, setShowModal] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     // Data from API
     const [doctors, setDoctors] = useState([])
@@ -114,42 +141,42 @@ const ReservationPage = ({ isLoggedIn }) => {
     // Fetch Data
     useEffect(() => {
         const initData = async () => {
-             // Fetch Doctors
-             try {
+            // Fetch Doctors
+            try {
                 const docRes = await apiFetch('/api/profil-dokter')
                 const docData = docRes.data || docRes
                 if (Array.isArray(docData)) {
                     setDoctors(docData.map(d => ({ value: d.idDokter, label: d.nama })))
                     if (docData.length > 0) setSelectedDoctorId(docData[0].idDokter)
                 }
-             } catch (e) {
-                 console.error("Err fetch doctors", e)
-             }
+            } catch (e) {
+                console.error("Err fetch doctors", e)
+            }
 
-             // Fetch Schedules
-             try {
+            // Fetch Schedules
+            try {
                 const schedRes = await apiFetch('/api/jadwal-reservasi')
                 const schedData = schedRes.data || schedRes
                 if (Array.isArray(schedData)) {
                     // Sort by time using jamMulai
-                    const sorted = schedData.sort((a,b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''))
+                    const sorted = schedData.sort((a, b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''))
                     setSchedules(sorted)
                 }
-             } catch (e) {
-                 console.error("Err fetch schedules", e)
-             }
+            } catch (e) {
+                console.error("Err fetch schedules", e)
+            }
 
-             // Fetch User Profile
-             if (isLoggedIn) {
-                 try {
-                     const me = await apiFetch('/api/me')
-                     setUserProfile(me)
-                     setCustomerName(me.nama || me.name || '')
-                     setCustomerWa(me.nomorWa || me.nomor_wa || '')
-                 } catch (e) {
-                     console.error("Err fetch me", e)
-                 }
-             }
+            // Fetch User Profile
+            if (isLoggedIn) {
+                try {
+                    const me = await apiFetch('/api/me')
+                    setUserProfile(me)
+                    setCustomerName(me.nama || me.name || '')
+                    setCustomerWa(me.nomorWa || me.nomor_wa || '')
+                } catch (e) {
+                    console.error("Err fetch me", e)
+                }
+            }
         }
         initData()
     }, [isLoggedIn])
@@ -195,8 +222,9 @@ const ReservationPage = ({ isLoggedIn }) => {
 
             console.log("Success:", response)
             setShowModal(false)
-            alert('Reservasi Berhasil Dibuat!')
-            
+            // alert('Reservasi Berhasil Dibuat!')
+            setShowSuccessModal(true)
+
             // Reset
             setBookingStep('schedule')
             setSelectedSlot(null)
@@ -268,7 +296,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                             <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
                                 <span className="mr-2 text-sm font-medium text-gray-600">Hari :</span> <span className="text-sm">{currentDayName}</span>
                             </div>
-                             <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
+                            <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
                                 <span className="mr-2 text-sm font-medium text-gray-600">Total Slot :</span> <span className="text-sm">{schedules.length}</span>
                             </div>
                         </div>
@@ -283,7 +311,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                                             onClick={() => handleSlotClick(slot)}
                                             className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer`}
                                         >
-                                            <span className="text-xl font-bold">{slot.jamMulai ? slot.jamMulai.slice(0,5) : slot.start} WIB</span>
+                                            <span className="text-xl font-bold">{slot.jamMulai ? slot.jamMulai.slice(0, 5) : slot.start} WIB</span>
                                             <div className="mt-2 rounded-full px-4 py-1 text-xs font-bold bg-white text-[#4aa731]">
                                                 Tersedia
                                             </div>
@@ -314,7 +342,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                                     <div>
                                         <label className="text-sm font-medium text-gray-500">Waktu</label>
                                         <div className="text-xl font-bold text-black">
-                                            {selectedSlot?.jamMulai?.slice(0,5)} - {selectedSlot?.jamSelesai?.slice(0,5)} WIB
+                                            {selectedSlot?.jamMulai?.slice(0, 5)} - {selectedSlot?.jamSelesai?.slice(0, 5)} WIB
                                         </div>
                                     </div>
                                     <div>
@@ -338,18 +366,18 @@ const ReservationPage = ({ isLoggedIn }) => {
                                     <h3 className="font-bold text-lg">Data Diri (Dapat disesuaikan)</h3>
                                     <div>
                                         <label className="mb-2 block font-medium">Nama Lengkap</label>
-                                        <input 
-                                            type="text" 
-                                            value={customerName} 
+                                        <input
+                                            type="text"
+                                            value={customerName}
                                             onChange={e => setCustomerName(e.target.value)}
                                             className="w-full rounded-xl border p-3 focus:outline-[#4aa731]"
                                         />
                                     </div>
                                     <div>
                                         <label className="mb-2 block font-medium">Nomor WhatsApp</label>
-                                        <input 
-                                            type="text" 
-                                            value={customerWa} 
+                                        <input
+                                            type="text"
+                                            value={customerWa}
                                             onChange={e => setCustomerWa(e.target.value)}
                                             className="w-full rounded-xl border p-3 focus:outline-[#4aa731]"
                                         />
@@ -374,6 +402,11 @@ const ReservationPage = ({ isLoggedIn }) => {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 onConfirm={handleConfirmReservation}
+            />
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
             />
 
             <Footer />

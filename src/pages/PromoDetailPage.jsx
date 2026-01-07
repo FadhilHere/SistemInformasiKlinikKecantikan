@@ -168,7 +168,7 @@ const PromoDetailPage = ({ isLoggedIn }) => {
             <Button
               variant="primary"
               className="mt-6 w-full"
-              onClick={() => navigate('/products')}
+              onClick={() => navigate('/product')}
             >
               Lihat Semua Produk
             </Button>

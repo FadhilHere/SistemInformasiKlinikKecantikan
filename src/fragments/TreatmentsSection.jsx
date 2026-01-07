@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import TreatmentCard from '../components/molecules/TreatmentCard'
 
 const TREATMENTS = [
@@ -33,6 +34,7 @@ const TREATMENTS = [
 ]
 
 const TreatmentsSection = () => {
+  const navigate = useNavigate()
   const scrollRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
@@ -107,7 +109,10 @@ const TreatmentsSection = () => {
             </style>
             {TREATMENTS.map((treatment) => (
               <div key={treatment.name} className="min-w-[300px] flex-shrink-0 snap-center select-none">
-                <TreatmentCard {...treatment} />
+                <TreatmentCard
+                  {...treatment}
+                  onClick={() => navigate('/reservation')}
+                />
               </div>
             ))}
           </div>

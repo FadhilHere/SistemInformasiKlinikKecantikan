@@ -8,7 +8,7 @@ const ClinicProfileForm = () => {
         misi: '',
         deskripsiPerusahaan: '',
         nomorCustomerService: '',
-        jamBuka: '',
+        jamBukak: '',
         jamKeluar: '',
         fotoFile: null
     });
@@ -33,7 +33,7 @@ const ClinicProfileForm = () => {
                     misi: profile.misi || '',
                     deskripsiPerusahaan: profile.deskripsiPerusahaan || '',
                     nomorCustomerService: profile.nomorCustomerService || '',
-                    jamBuka: profile.jamBuka || '',
+                    jamBukak: profile.jamBukak || '',
                     jamKeluar: profile.jamKeluar || '',
                     fotoFile: null
                 });
@@ -78,7 +78,7 @@ const ClinicProfileForm = () => {
         fd.append('deskripsiPerusahaan', data.deskripsiPerusahaan || '');
         fd.append('nomorCustomerService', data.nomorCustomerService || '');
         // Format time to H:i (remove seconds if present)
-        fd.append('jamBuka', data.jamBuka ? data.jamBuka.substring(0, 5) : '');
+        fd.append('jamBukak', data.jamBukak ? data.jamBukak.substring(0, 5) : '');
         fd.append('jamKeluar', data.jamKeluar ? data.jamKeluar.substring(0, 5) : '');
         if (data.fotoFile) {
             fd.append('foto', data.fotoFile);
@@ -136,7 +136,7 @@ const ClinicProfileForm = () => {
                     misi: '',
                     deskripsiPerusahaan: '',
                     nomorCustomerService: '',
-                    jamBuka: '',
+                    jamBukak: '',
                     jamKeluar: '',
                     fotoFile: null
                 });
@@ -222,8 +222,8 @@ const ClinicProfileForm = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Jam Operasional Buka</label>
                         <input
                             type="time"
-                            name="jamBuka"
-                            value={formData.jamBuka}
+                            name="jamBukak"
+                            value={formData.jamBukak}
                             onChange={handleChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                         />

@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
 import ProductCategoryTabs from '../components/molecules/ProductCategoryTabs'
-import { apiFetch } from '../lib/api'
+import { apiFetch, API_BASE_URL } from '../lib/api'
 import Footer from '../fragments/Footer'
 
 const heroImage =
@@ -12,18 +13,24 @@ const ProductsPage = ({ isLoggedIn }) => {
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [category, setCategory] = useState('Semua Produk')
+  const [category, setCategory] = useState('all')
+  const [categories, setCategories] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
+    const normalizeListResponse = (res) => {
+      if (Array.isArray(res)) return res
+      if (Array.isArray(res?.data)) return res.data
+      if (Array.isArray(res?.data?.data)) return res.data.data
+      return []
+    }
+
     const fetchProducts = async () => {
       try {
         setIsLoading(true)
         const response = await apiFetch('/api/produk-klinik')
-        if (response.success && Array.isArray(response.data)) {
-          setProducts(response.data)
-        } else {
-          setProducts([])
-        }
+        const list = normalizeListResponse(response)
+        setProducts(Array.isArray(list) ? list : [])
       } catch (err) {
         console.error('Error fetching products:', err)
         setError('Gagal memuat produk. Silakan coba lagi nanti.')
@@ -32,19 +39,37 @@ const ProductsPage = ({ isLoggedIn }) => {
       }
     }
 
+    const fetchCategories = async () => {
+      try {
+        const response = await apiFetch('/api/kategori-produk')
+        const list = normalizeListResponse(response)
+        const normalized = list
+          .map((item) => ({
+            id: item.idKategori ?? item.id,
+            name: item.namaKategori ?? item.nama ?? item.name
+          }))
+          .filter((item) => item.id != null && item.name)
+        setCategories(normalized)
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+        setCategories([])
+      }
+    }
+
     fetchProducts()
+    fetchCategories()
   }, [])
 
   const filteredProducts = useMemo(() => {
-    if (category === 'Semua Produk') return products
+    if (category === 'all') return products
 
     return products.filter((product) => {
-      // Assuming backend returns category object or we filter by category name
-      // If the backend 'kategori' relation has a name, use it.
-      // Fallback: if 'kategori' is just an ID, this might break without mapping.
-      // For now, let's try to match loosely if the backend provides category data.
-      const productCategory = product.kategori?.namaKategori || product.kategori?.nama || ''
-      return productCategory.toLowerCase().includes(category.toLowerCase())
+      const productCategoryId =
+        product.idKategori ??
+        product.kategori?.idKategori ??
+        product.kategori?.id ??
+        null
+      return String(productCategoryId) === String(category)
     })
   }, [category, products])
 
@@ -56,8 +81,13 @@ const ProductsPage = ({ isLoggedIn }) => {
     }).format(price)
   }
 
-  // Helper to generate a consistent placeholder image based on ID
-  const getProductImage = (id) => {
+  // Helper to generate a consistent placeholder image based on product data
+  const getProductImage = (product) => {
+    if (product?.gambar) {
+      return product.gambar.startsWith('http')
+        ? product.gambar
+        : `${API_BASE_URL}/storage/${product.gambar}`
+    }
     const images = [
       'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80',
@@ -65,7 +95,8 @@ const ProductsPage = ({ isLoggedIn }) => {
       'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=600&q=80'
     ]
-    return images[id % images.length] || images[0]
+    const fallbackId = product?.idProduk ?? product?.id ?? 0
+    return images[fallbackId % images.length] || images[0]
   }
 
   return (
@@ -109,6 +140,7 @@ const ProductsPage = ({ isLoggedIn }) => {
         <ProductCategoryTabs
           activeCategory={category}
           onSelect={setCategory}
+          categories={categories}
         />
 
         {isLoading ? (
@@ -128,13 +160,11 @@ const ProductsPage = ({ isLoggedIn }) => {
             {filteredProducts.map((product) => (
               <article
                 key={product.idProduk || product.id}
-                // Use window.location as fallback or better yet use navigate if we convert to link, but for now simple onClick with href change or Link component
-                // Actually step 47 code shows basic div structure. I will inject navigate using hook.
-                onClick={() => window.location.href = `/products/${product.idProduk || product.id}`}
+                onClick={() => navigate(`/product/${product.idProduk || product.id}`)}
                 className="flex cursor-pointer flex-col rounded-tl-[28px] rounded-br-[28px] rounded-tr-none rounded-bl-none bg-white p-6 text-center shadow-card transition-shadow hover:shadow-xl"
               >
                 <img
-                  src={getProductImage(product.idProduk || product.id)}
+                  src={getProductImage(product)}
                   alt={product.nama}
                   className="mx-auto h-48 w-full rounded-tl-[28px] rounded-br-[28px] rounded-tr-none rounded-bl-none object-cover"
                 />
@@ -144,8 +174,8 @@ const ProductsPage = ({ isLoggedIn }) => {
                 <p className="mb-4 text-brand/70 line-clamp-2 text-sm mt-1">{product.deskripsi}</p>
                 <div className="mt-auto">
                   <p className="text-lg font-bold text-brand">{formatPrice(product.harga)}</p>
-                  <p className={`text-xs ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {product.stock > 0 ? `Stok: ${product.stock}` : 'Stok Habis'}
+                  <p className={`text-xs ${(product.stock ?? product.stok ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(product.stock ?? product.stok ?? 0) > 0 ? `Stok: ${product.stock ?? product.stok ?? 0}` : 'Stok Habis'}
                   </p>
                 </div>
               </article>

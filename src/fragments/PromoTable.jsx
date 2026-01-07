@@ -145,14 +145,10 @@ const PromoTable = () => {
     };
 
     const getStatusBadgeClass = (status) => {
-        switch (status) {
-            case 'Active':
-                return 'bg-green-100 text-green-600';
-            case 'Inactive':
-                return 'bg-gray-100 text-gray-600';
-            default:
-                return 'bg-gray-100 text-gray-600';
+        if (status === 1 || status === true || status === 'Active' || status === '1') {
+            return 'bg-green-100 text-green-600';
         }
+        return 'bg-gray-100 text-gray-600';
     };
 
     // Filter

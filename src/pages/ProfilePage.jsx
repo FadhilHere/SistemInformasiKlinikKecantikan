@@ -6,6 +6,7 @@ import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import {
     isValidPhone,
+    isValidEmail,
     isNotEmpty,
     sanitizeInput
 } from '../utils/validators'
@@ -30,16 +31,13 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
-    const [oldPassword, setOldPassword] = useState("") // New state
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' })
-    const [userId, setUserId] = useState(null) // New state
 
     useEffect(() => {
         if (isLoggedIn) {
             const fetchProfile = async () => {
                 try {
                     const user = await apiFetch('/api/me');
-                    if (user.id) setUserId(user.id);
                     setName(user.nama || '');
                     setAddress(user.alamat || '');
                     setBirthDate(user.tanggalLahir || user.tanggal_lahir ? new Date(user.tanggalLahir || user.tanggal_lahir) : null);
@@ -49,7 +47,7 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                 } catch (error) {
                     console.error("Failed to fetch profile", error);
                     if (error.status === 401) {
-                         onLogout();
+                        onLogout();
                     }
                 }
             };
@@ -57,7 +55,13 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
         }
     }, [isLoggedIn, onLogout]);
 
-    const handleSave = () => {
+    const formatDateForApi = (dateValue) => {
+        if (!dateValue) return null
+        if (typeof dateValue === 'string') return dateValue
+        return dateValue.toISOString().split('T')[0]
+    }
+
+    const handleSave = async () => {
         // Basic Empty Checks
         if (!isNotEmpty(name) || !isNotEmpty(address) || !birthDate || !isNotEmpty(whatsapp) || !isNotEmpty(email)) {
             setStatusMessage({ type: 'error', text: 'Semua data diri wajib diisi.' })
@@ -84,23 +88,37 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
         // "12345" is weak. 
         // Ideally we shouldn't prepopulate password in plain text, but this is a mock.
 
-        if (password !== confirmPassword) {
+        if (password && password !== confirmPassword) {
             setStatusMessage({ type: 'error', text: 'Password dan konfirmasi tidak sama.' })
             return
         }
 
         // Sanitize
-        const cleanData = {
-            name: sanitizeInput(name),
-            address: sanitizeInput(address),
-            gender: sanitizeInput(gender), // Select, but good to be safe
-            whatsapp: sanitizeInput(whatsapp),
-            email: sanitizeInput(email),
-            // Password usually hashed server side, we don't sanitize characters as they are effectively secrets
+        const payload = {
+            nama: sanitizeInput(name),
+            alamat: sanitizeInput(address),
+            jenisKelamin: sanitizeInput(gender),
+            tanggalLahir: formatDateForApi(birthDate),
+            nomorWa: sanitizeInput(whatsapp),
+            email: sanitizeInput(email)
         }
 
-        console.log("Saving clean data:", cleanData)
-        setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
+        if (password) {
+            payload.password = password
+        }
+
+        try {
+            await apiFetch('/api/users/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
+            setPassword('')
+            setConfirmPassword('')
+        } catch (error) {
+            setStatusMessage({ type: 'error', text: error?.data?.message || error?.message || 'Gagal memperbarui profil.' })
+        }
     }
 
     // (Removed duplicate reservationHistory)
@@ -158,6 +176,7 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [newDate, setNewDate] = useState(new Date())
     const [selectedSlotId, setSelectedSlotId] = useState('')
+    const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
     const [availableSlots, setAvailableSlots] = useState([])
 
     // Fetch Reservations
@@ -176,12 +195,12 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                     } else if (response.data && Array.isArray(response.data)) {
                         data = response.data
                     } else if (response.reservasi && Array.isArray(response.reservasi)) {
-                         data = response.reservasi
+                        data = response.reservasi
                     }
 
                     console.log('Extracted Reservation Data:', data) // DEBUG
                     setReservations(data)
-                    
+
                 } catch (error) {
                     console.error("Failed to fetch reservations", error)
                 } finally {
@@ -208,41 +227,48 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
         if (isLoggedIn) fetchSlots()
     }, [isLoggedIn])
 
+    const treatments = [
+        { value: 'Acne Treatment', label: 'Acne Treatment' },
+        { value: 'Whitening Treatment', label: 'Whitening Treatment' },
+        { value: 'Anti Aging', label: 'Anti Aging' }
+    ]
+
     const handleEditClick = (reservation) => {
         setSelectedReservation(reservation)
-        setNewDate(reservation.tanggal ? new Date(reservation.tanggal) : new Date())
+        setNewDate(reservation.tanggalReservasi ? new Date(reservation.tanggalReservasi) : new Date())
         setSelectedSlotId(reservation.idJadwal || '')
+        setSelectedTreatment(reservation.jenisTreatment || 'Acne Treatment')
         setIsRescheduleModalOpen(true)
     }
 
     const handleSaveReschedule = async () => {
-        if (!selectedReservation || !newDate || !selectedSlotId) {
-             setStatusMessage({ type: 'error', text: 'Mohon lengkapi tanggal dan jam baru.' })
-             return
+        if (!selectedReservation || !newDate || !selectedSlotId || !selectedTreatment) {
+            setStatusMessage({ type: 'error', text: 'Mohon lengkapi Tanggal, Jam, dan Jenis Treatment.' })
+            return
         }
 
         try {
             const formattedDate = newDate.toISOString().split('T')[0]
-            
+
             await apiFetch(`/api/reservasi/${selectedReservation.idReservasi}`, {
                 method: 'PUT',
                 body: JSON.stringify({
                     tanggalReservasi: formattedDate,
                     idJadwal: selectedSlotId,
-                    // Preserve other fields if backend requires them, but usually PUT accepts partial or we send what we change
-                    idDokter: selectedReservation.idDokter, 
-                    idTreatment: selectedReservation.idTreatment
+                    jenisTreatment: selectedTreatment,
+                    isRescheduled: true, // Mark as rescheduled
+                    idDokter: selectedReservation.idDokter,
                 })
             })
 
             setStatusMessage({ type: 'success', text: 'Jadwal reservasi berhasil diubah.' })
             setIsRescheduleModalOpen(false)
-            
+
             // Refresh List
             const response = await apiFetch('/api/reservasi')
-            const data = response.data || response
+            const data = response.data || response // Assuming backend returns updated list with isRescheduled
             if (Array.isArray(data)) {
-                 setReservations(data)
+                setReservations(data)
             }
 
         } catch (error) {
@@ -418,20 +444,6 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                 {/* Change Password Section */}
                                 <div className="mt-6 border-t pt-6">
                                     <h3 className="mb-4 text-lg font-bold text-gray-700">Ubah Password (Opsional)</h3>
-                                    
-                                    {/* Old Password */}
-                                    <div className="mb-4 grid grid-cols-1 items-center gap-4 md:grid-cols-4">
-                                        <label className="font-bold text-black md:col-span-1">Password Lama <span className="float-right hidden md:inline">:</span></label>
-                                        <div className="md:col-span-3">
-                                            <input
-                                                type="password"
-                                                value={oldPassword}
-                                                onChange={(e) => setOldPassword(e.target.value)}
-                                                placeholder="Masukkan password lama jika ingin mengubah"
-                                                className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
 
                                     {/* New Password */}
                                     <div className="mb-4 grid grid-cols-1 items-center gap-4 md:grid-cols-4">
@@ -479,21 +491,10 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
 
                             </div>
 
-                            {/* Profile Picture Section */}
-                            <div className="flex flex-col items-center justify-start py-4">
-                                <div className="relative mb-6 h-48 w-48 overflow-hidden rounded-full border-4 border-white bg-pink-100 shadow-lg">
-                                    <img
-                                        src="https://img.freepik.com/premium-vector/avatar-profile-icon-flat-style-female-user-profile-vector-illustration-isolated-background-women-profile-sign-business-concept_157943-38866.jpg?w=740"
-                                        alt="Profile"
-                                        className="h-full w-full object-cover"
-                                    />
-                                </div>
-                                <button className="rounded-full bg-white px-8 py-2 font-bold text-black shadow-md ring-1 ring-gray-200 hover:bg-gray-50">
-                                    Pilih Gambar
-                                </button>
+                            <div className="flex items-start justify-end py-4">
                                 <button
                                     onClick={onLogout}
-                                    className="mt-6 rounded-full bg-red-500 px-10 py-2 font-bold text-white shadow-md transition hover:bg-red-600"
+                                    className="rounded-full bg-red-500 px-10 py-2 font-bold text-white shadow-md transition hover:bg-red-600"
                                 >
                                     Keluar
                                 </button>
@@ -522,8 +523,15 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                             <tr key={index} className="hover:bg-gray-50">
                                                 <td className="p-4">R-{item.idReservasi}</td>
                                                 <td className="p-4">{formatDate(item.tanggalReservasi)}</td>
-                                                <td className="p-4">{item.schedule?.waktuMulai ? `${item.schedule.waktuMulai.slice(0,5)} - ${item.schedule.waktuSelesai.slice(0,5)}` : '-'}</td>
-                                                <td className="p-4">{item.treatment?.namaTreatment || '-'}</td>
+                                                <td className="p-4">
+                                                    {item.jadwal?.jamMulai
+                                                        ? `${item.jadwal.jamMulai.slice(0, 5)} - ${item.jadwal.jamSelesai.slice(0, 5)}`
+                                                        : (item.schedule?.waktuMulai
+                                                            ? `${item.schedule.waktuMulai.slice(0, 5)} - ${item.schedule.waktuSelesai.slice(0, 5)}`
+                                                            : '-')
+                                                    }
+                                                </td>
+                                                <td className="p-4">{item.jenisTreatment || item.treatment?.namaTreatment || '-'}</td>
                                                 <td className="p-4">
                                                     <div className="flex justify-center">
                                                         <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} max-w-[200px] leading-tight capitalize`}>
@@ -533,8 +541,12 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex justify-center">
-                                                        {item.status === 'pending' || item.status === 'confirmed' ? ( // Example logic
-                                                            <button 
+                                                        {item.isRescheduled ? (
+                                                            <button disabled className="cursor-not-allowed rounded-full bg-gray-400 px-4 py-2 text-white shadow-md text-xs">
+                                                                Tidak Bisa Mengubah Jadwal
+                                                            </button>
+                                                        ) : (item.status === 'pending' || item.status === 'confirmed') ? (
+                                                            <button
                                                                 onClick={() => handleEditClick(item)}
                                                                 className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]"
                                                             >
@@ -568,13 +580,13 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Reschedule Modal */}
                     {isRescheduleModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
                             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                                 <h3 className="mb-4 text-xl font-bold text-gray-800">Ubah Jadwal Reservasi</h3>
-                                
+
                                 <div className="mb-4 space-y-4">
                                     <div>
                                         <label className="mb-1 block text-sm font-semibold text-gray-700">Tanggal Baru</label>
@@ -585,7 +597,20 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
                                         />
                                     </div>
-                                    
+
+                                    <div>
+                                        <label className="mb-1 block text-sm font-semibold text-gray-700">Jenis Treatment</label>
+                                        <select
+                                            value={selectedTreatment}
+                                            onChange={(e) => setSelectedTreatment(e.target.value)}
+                                            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
+                                        >
+                                            {treatments.map((t) => (
+                                                <option key={t.value} value={t.value}>{t.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
                                     <div>
                                         <label className="mb-1 block text-sm font-semibold text-gray-700">Waktu (Slot)</label>
                                         <select
@@ -594,11 +619,24 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
                                         >
                                             <option value="">Pilih Slot Waktu</option>
-                                            {availableSlots.map(slot => (
-                                                <option key={slot.idJadwal} value={slot.idJadwal}>
-                                                    {slot.waktuMulai ? slot.waktuMulai.slice(0, 5) : slot.start_time} - {slot.waktuSelesai ? slot.waktuSelesai.slice(0, 5) : slot.end_time}
-                                                </option>
-                                            ))}
+                                            {availableSlots
+                                                .filter(slot => {
+                                                    // Filter logic: Exclude current slot if date is the same
+                                                    if (!selectedReservation || !newDate) return true
+
+                                                    const currentResDate = new Date(selectedReservation.tanggalReservasi).toDateString()
+                                                    const selectedNewDate = newDate.toDateString()
+
+                                                    if (currentResDate === selectedNewDate) {
+                                                        return slot.idJadwal !== selectedReservation.idJadwal
+                                                    }
+                                                    return true
+                                                })
+                                                .map(slot => (
+                                                    <option key={slot.idJadwal} value={slot.idJadwal}>
+                                                        {slot.jamMulai ? slot.jamMulai.slice(0, 5) : slot.waktuMulai || slot.start_time} - {slot.jamSelesai ? slot.jamSelesai.slice(0, 5) : slot.waktuSelesai || slot.end_time}
+                                                    </option>
+                                                ))}
                                         </select>
                                     </div>
                                 </div>
