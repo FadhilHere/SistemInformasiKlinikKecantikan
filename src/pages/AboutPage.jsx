@@ -92,7 +92,7 @@ const AboutPage = ({ isLoggedIn }) => {
                         {/* Staff Image */}
                         <div className="relative z-10 w-full md:w-1/2">
                             <img
-                                src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=800&q=80"
+                                src={getImageUrl(profile?.gambar)}
                                 alt="Mische Staff"
                                 className="rounded-xl shadow-2xl"
                             />
@@ -129,7 +129,7 @@ const AboutPage = ({ isLoggedIn }) => {
                         {/* Building Image */}
                         <div className="w-full md:w-1/2">
                             <img
-                                src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80"
+                                src={getImageUrl(profile?.gambar)}
                                 alt="Mische Clinic Building"
                                 className="h-full w-full rounded-2xl object-cover shadow-lg"
                             />

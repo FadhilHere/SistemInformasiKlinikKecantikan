@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
-import { apiFetch } from '../lib/api';
+import { apiFetch, API_BASE_URL } from '../lib/api';
 
 const ClinicProfileForm = () => {
     const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ const ClinicProfileForm = () => {
         nomorCustomerService: '',
         jamBukak: '',
         jamKeluar: '',
-        fotoFile: null
+        gambarFile: null
     });
     const [photoPreview, setPhotoPreview] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -35,11 +35,11 @@ const ClinicProfileForm = () => {
                     nomorCustomerService: profile.nomorCustomerService || '',
                     jamBukak: profile.jamBukak || '',
                     jamKeluar: profile.jamKeluar || '',
-                    fotoFile: null
+                    gambarFile: null
                 });
                 // Set photo preview if exists
-                if (profile.foto) {
-                    setPhotoPreview(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/${profile.foto}`);
+                if (profile.gambar) {
+                    setPhotoPreview(`${API_BASE_URL}/storage/${profile.gambar}`);
                 }
             }
         } catch (err) {
@@ -61,7 +61,7 @@ const ClinicProfileForm = () => {
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            setFormData(prev => ({ ...prev, fotoFile: file }));
+            setFormData(prev => ({ ...prev, gambarFile: file }));
             // Create preview
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -80,8 +80,8 @@ const ClinicProfileForm = () => {
         // Format time to H:i (remove seconds if present)
         fd.append('jamBukak', data.jamBukak ? data.jamBukak.substring(0, 5) : '');
         fd.append('jamKeluar', data.jamKeluar ? data.jamKeluar.substring(0, 5) : '');
-        if (data.fotoFile) {
-            fd.append('foto', data.fotoFile);
+        if (data.gambarFile) {
+            fd.append('gambar', data.gambarFile);
         }
         return fd;
     };
@@ -138,7 +138,7 @@ const ClinicProfileForm = () => {
                     nomorCustomerService: '',
                     jamBukak: '',
                     jamKeluar: '',
-                    fotoFile: null
+                    gambarFile: null
                 });
                 setPhotoPreview('');
                 alert('Profil berhasil dihapus!');
@@ -258,7 +258,7 @@ const ClinicProfileForm = () => {
                             Choose File
                         </label>
                         <span className="text-sm text-gray-500">
-                            {formData.fotoFile ? formData.fotoFile.name : (photoPreview ? 'File Selected' : 'No File Choosen')}
+                            {formData.gambarFile ? formData.gambarFile.name : (photoPreview ? 'File Selected' : 'No File Choosen')}
                         </span>
                     </div>
                     {photoPreview && (

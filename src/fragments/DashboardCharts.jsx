@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 // Reusable Card for Chart Sections
 const ChartCard = ({ title, subtitle, children, className = "" }) => (
@@ -98,22 +98,61 @@ const ProductHorizontalChart = ({ data = [], isLoading }) => {
 const ReservationPieChart = ({ data = [], isLoading }) => {
     const colors = ['#68d391', '#48bb78', '#2f855a', '#006400', '#7ccf8a', '#3aa655'];
     const total = data.reduce((sum, item) => sum + (item.value || 0), 0);
-    let gradientParts = [];
-    let currentPos = 0;
-    data.forEach((seg, index) => {
-        const percent = total > 0 ? (seg.value / total) * 100 : 0;
-        const color = colors[index % colors.length];
-        gradientParts.push(`${color} ${currentPos}% ${currentPos + percent}%`);
-        currentPos += percent;
-    });
+    const radius = 80;
+    const circumference = 2 * Math.PI * radius;
+    let offset = 0;
+    const [tooltip, setTooltip] = useState(null);
+    const containerRef = useRef(null);
 
     return (
         <>
-            <div className="relative w-64 h-64">
-                <div
-                    className="w-full h-full rounded-full"
-                    style={{ background: total > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#f3f4f6' }}
-                ></div>
+            <div ref={containerRef} className="relative w-64 h-64">
+                <svg viewBox="0 0 200 200" className="w-full h-full">
+                    <circle cx="100" cy="100" r={radius} fill="none" stroke="#f3f4f6" strokeWidth="30" />
+                    {data.map((seg, index) => {
+                        const value = seg.value || 0;
+                        const percent = total > 0 ? value / total : 0;
+                        const dash = percent * circumference;
+                        const gap = circumference - dash;
+                        const strokeDasharray = `${dash} ${gap}`;
+                        const strokeDashoffset = -offset;
+                        offset += dash;
+                        return (
+                            <circle
+                                key={`${seg.label}-${index}`}
+                                cx="100"
+                                cy="100"
+                                r={radius}
+                                fill="none"
+                                stroke={colors[index % colors.length]}
+                                strokeWidth="30"
+                                strokeDasharray={strokeDasharray}
+                                strokeDashoffset={strokeDashoffset}
+                                transform="rotate(-90 100 100)"
+                                onMouseEnter={(e) => {
+                                    if (!containerRef.current) return;
+                                    const rect = containerRef.current.getBoundingClientRect();
+                                    setTooltip({
+                                        x: e.clientX - rect.left,
+                                        y: e.clientY - rect.top,
+                                        label: seg.label,
+                                        value
+                                    });
+                                }}
+                                onMouseMove={(e) => {
+                                    if (!containerRef.current) return;
+                                    const rect = containerRef.current.getBoundingClientRect();
+                                    setTooltip((prev) =>
+                                        prev
+                                            ? { ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top }
+                                            : prev
+                                    );
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                            />
+                        );
+                    })}
+                </svg>
 
                 {total === 0 && !isLoading && (
                     <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
@@ -125,6 +164,14 @@ const ReservationPieChart = ({ data = [], isLoading }) => {
                         loading...
                     </div>
                 )}
+                {tooltip && (
+                    <div
+                        className="pointer-events-none absolute rounded bg-black/80 px-2 py-1 text-[10px] text-white"
+                        style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -120%)' }}
+                    >
+                        {tooltip.label}: {tooltip.value}
+                    </div>
+                )}
             </div>
             {data.length > 0 && (
                 <div className="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600">
@@ -134,7 +181,7 @@ const ReservationPieChart = ({ data = [], isLoading }) => {
                                 className="h-2 w-2 rounded-full"
                                 style={{ backgroundColor: colors[index % colors.length] }}
                             />
-                            <span title={`${item.label}: ${item.value}`}>
+                            <span>
                                 {item.label} ({item.value})
                             </span>
                         </div>
@@ -151,6 +198,8 @@ const SalesLineChart = ({ data = [], isLoading }) => {
     const height = 100;
     const width = 240;
     const step = data.length > 1 ? width / (data.length - 1) : width;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const [tooltip, setTooltip] = useState(null);
     const points = data.map((value, index) => {
         const x = index * step;
         const y = height - (value / maxValue) * height;
@@ -186,16 +235,30 @@ const SalesLineChart = ({ data = [], isLoading }) => {
                             return (
                                 <div
                                     key={`${index}-${value}`}
-                                    className="group absolute"
+                                    className="absolute"
                                     style={{ left: `${x}%`, top: `${y}%` }}
+                                    onMouseEnter={() => {
+                                        setTooltip({
+                                            x: `${x}%`,
+                                            y: `${y}%`,
+                                            label: months[index] || `Bulan ${index + 1}`,
+                                            value
+                                        });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
                                 >
                                     <div className="h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#008000]" />
-                                    <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-black/70 px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
-                                        {value.toLocaleString()}
-                                    </div>
                                 </div>
                             );
                         })}
+                        {tooltip && (
+                            <div
+                                className="pointer-events-none absolute rounded bg-black/80 px-2 py-1 text-[10px] text-white"
+                                style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -140%)' }}
+                            >
+                                {tooltip.label}: {tooltip.value.toLocaleString()}
+                            </div>
+                        )}
                     </div>
                 )}
                 {data.length === 0 && !isLoading && (
