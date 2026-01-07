@@ -23,7 +23,7 @@ class ProfilPerusahaanController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = ProfilPerusahaan::all();
 
@@ -35,7 +35,7 @@ class ProfilPerusahaanController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $profil = ProfilPerusahaan::find($id);
 

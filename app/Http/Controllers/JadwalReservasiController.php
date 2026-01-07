@@ -22,7 +22,7 @@ class JadwalReservasiController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = JadwalReservasi::all();
 
@@ -34,7 +34,7 @@ class JadwalReservasiController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $jadwal = JadwalReservasi::find($id);
         if (!$jadwal) {

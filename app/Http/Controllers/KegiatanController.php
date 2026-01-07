@@ -24,7 +24,7 @@ class KegiatanController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = Kegiatan::all();
 
@@ -36,7 +36,7 @@ class KegiatanController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $kegiatan = Kegiatan::find($id);
 

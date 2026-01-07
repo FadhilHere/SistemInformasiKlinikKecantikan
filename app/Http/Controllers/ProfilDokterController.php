@@ -24,7 +24,7 @@ class ProfilDokterController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = ProfilDokter::all();
 
@@ -36,7 +36,7 @@ class ProfilDokterController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $dokter = ProfilDokter::find($id);
 

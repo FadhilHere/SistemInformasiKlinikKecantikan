@@ -24,7 +24,7 @@ class PromoController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = Promo::all();
 
@@ -36,7 +36,7 @@ class PromoController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $promo = Promo::find($id);
 

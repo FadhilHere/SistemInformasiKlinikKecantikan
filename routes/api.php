@@ -37,22 +37,19 @@ Route::middleware('auth:api')->group(function () {
     // --- EXISTING ROUTES ---
 
     // CRUD profil dokter - hanya admin (dicek di controller)
-    Route::get('/profil-dokter', [ProfilDokterController::class, 'index']);
-    Route::get('/profil-dokter/{id}', [ProfilDokterController::class, 'show']);
+   
     Route::post('/profil-dokter', [ProfilDokterController::class, 'store']);
     Route::put('/profil-dokter/{id}', [ProfilDokterController::class, 'update']);
     Route::delete('/profil-dokter/{id}', [ProfilDokterController::class, 'destroy']);
 
     // CRUD jadwal reservasi - hanya admin (dicek di controller)
-    Route::get('/jadwal-reservasi', [JadwalReservasiController::class, 'index']);
-    Route::get('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'show']);
+   
     Route::post('/jadwal-reservasi', [JadwalReservasiController::class, 'store']);
     Route::put('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'update']);
     Route::delete('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'destroy']);
 
     // CRUD reservasi - admin bisa semua, pelanggan hanya miliknya (dicek di controller)
-    Route::get('/reservasi', [ReservasiController::class, 'index']);
-    Route::get('/reservasi/{id}', [ReservasiController::class, 'show']);
+ 
     Route::post('/reservasi', [ReservasiController::class, 'store']);
     Route::put('/reservasi/{id}', [ReservasiController::class, 'update']);
     Route::delete('/reservasi/{id}', [ReservasiController::class, 'destroy']);
@@ -74,22 +71,19 @@ Route::middleware('auth:api')->group(function () {
     // --- OTHER TEAM MEMBERS ROUTES ---
 
     // CRUD event - hanya admin (dicek di controller)
-    Route::get('/event', [EventController::class, 'index']);
-    Route::get('/event/{id}', [EventController::class, 'show']);
+ 
     Route::post('/event', [EventController::class, 'store']);
     Route::put('/event/{id}', [EventController::class, 'update']);
     Route::delete('/event/{id}', [EventController::class, 'destroy']);
 
     // CRUD kegiatan - hanya admin (dicek di controller)
-    Route::get('/kegiatan', [KegiatanController::class, 'index']);
-    Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
+ 
     Route::post('/kegiatan', [KegiatanController::class, 'store']);
     Route::put('/kegiatan/{id}', [KegiatanController::class, 'update']);
     Route::delete('/kegiatan/{id}', [KegiatanController::class, 'destroy']);
 
     // CRUD promo - hanya admin (dicek di controller)
-    Route::get('/promo', [PromoController::class, 'index']);
-    Route::get('/promo/{id}', [PromoController::class, 'show']);
+    
     Route::post('/promo', [PromoController::class, 'store']);
     Route::put('/promo/{id}', [PromoController::class, 'update']);
     Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
@@ -112,6 +106,9 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/kategori-produk/{id}', [KategoriProdukController::class, 'destroy']);
 });
 
+Route::get('/kegiatan', [KegiatanController::class, 'index']);
+Route::get('/kegiatan/{id}', [KegiatanController::class, 'show']);
+
 // Public routes untuk produk klinik (read-only)
 Route::get('/produk-klinik', [ProdukKlinikController::class, 'index']);
 Route::get('/produk-klinik/{id}', [ProdukKlinikController::class, 'show']);
@@ -119,3 +116,18 @@ Route::get('/produk-klinik/{id}', [ProdukKlinikController::class, 'show']);
 // Public routes untuk testimoni (read-only)
 Route::get('/testimoni', [TestimoniController::class, 'index']);
 Route::get('/testimoni/{id}', [TestimoniController::class, 'show']);
+
+Route::get('/profil-dokter', [ProfilDokterController::class, 'index']);
+Route::get('/profil-dokter/{id}', [ProfilDokterController::class, 'show']);
+
+Route::get('/promo', [PromoController::class, 'index']);
+Route::get('/promo/{id}', [PromoController::class, 'show']);
+
+Route::get('/event', [EventController::class, 'index']);
+Route::get('/event/{id}', [EventController::class, 'show']);
+
+Route::get('/reservasi', [ReservasiController::class, 'index']);
+Route::get('/reservasi/{id}', [ReservasiController::class, 'show']);
+
+Route::get('/jadwal-reservasi', [JadwalReservasiController::class, 'index']);
+Route::get('/jadwal-reservasi/{id}', [JadwalReservasiController::class, 'show']);

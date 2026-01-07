@@ -24,7 +24,7 @@ class EventController extends Controller
 
     public function index()
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $data = Event::all();
 
@@ -36,7 +36,7 @@ class EventController extends Controller
 
     public function show($id)
     {
-        $this->ensureAdmin();
+        // $this->ensureAdmin();
 
         $event = Event::find($id);
 
