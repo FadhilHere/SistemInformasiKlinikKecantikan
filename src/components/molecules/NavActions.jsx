@@ -19,7 +19,14 @@ const NavActions = ({ isLoggedIn }) => {
         <Button
           variant="primary"
           className="flex items-center gap-2 !px-6"
-          onClick={() => navigate('/profile')}
+          onClick={() => {
+              const role = localStorage.getItem('role')
+              if (role?.toLowerCase() === 'admin') {
+                  navigate('/dashboard')
+              } else {
+                  navigate('/profile')
+              }
+          }}
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />

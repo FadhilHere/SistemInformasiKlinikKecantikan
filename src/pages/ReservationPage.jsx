@@ -5,6 +5,7 @@ import DatePicker, { registerLocale } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
+import { apiFetch } from '../lib/api'
 
 registerLocale('id', id)
 
@@ -93,12 +94,65 @@ const ReservationPage = ({ isLoggedIn }) => {
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [showModal, setShowModal] = useState(false)
 
+    // Data from API
+    const [doctors, setDoctors] = useState([])
+    const [schedules, setSchedules] = useState([])
+    const [userProfile, setUserProfile] = useState({ nama: '', nomorWa: '' })
+
+    // Form Selection
     const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
-    const [selectedDoctor, setSelectedDoctor] = useState('dr. Widya')
+    const [selectedDoctorId, setSelectedDoctorId] = useState('') // ID
     const [selectedDate, setSelectedDate] = useState(new Date())
+
+    // Form Input (for detail step)
+    const [customerName, setCustomerName] = useState('')
+    const [customerWa, setCustomerWa] = useState('')
 
     const currentDayName = format(selectedDate, 'EEEE', { locale: id })
     const formattedDate = format(selectedDate, 'd MMMM yyyy', { locale: id })
+
+    // Fetch Data
+    useEffect(() => {
+        const initData = async () => {
+             // Fetch Doctors
+             try {
+                const docRes = await apiFetch('/api/profil-dokter')
+                const docData = docRes.data || docRes
+                if (Array.isArray(docData)) {
+                    setDoctors(docData.map(d => ({ value: d.idDokter, label: d.nama })))
+                    if (docData.length > 0) setSelectedDoctorId(docData[0].idDokter)
+                }
+             } catch (e) {
+                 console.error("Err fetch doctors", e)
+             }
+
+             // Fetch Schedules
+             try {
+                const schedRes = await apiFetch('/api/jadwal-reservasi')
+                const schedData = schedRes.data || schedRes
+                if (Array.isArray(schedData)) {
+                    // Sort by time using jamMulai
+                    const sorted = schedData.sort((a,b) => (a.jamMulai || '').localeCompare(b.jamMulai || ''))
+                    setSchedules(sorted)
+                }
+             } catch (e) {
+                 console.error("Err fetch schedules", e)
+             }
+
+             // Fetch User Profile
+             if (isLoggedIn) {
+                 try {
+                     const me = await apiFetch('/api/me')
+                     setUserProfile(me)
+                     setCustomerName(me.nama || me.name || '')
+                     setCustomerWa(me.nomorWa || me.nomor_wa || '')
+                 } catch (e) {
+                     console.error("Err fetch me", e)
+                 }
+             }
+        }
+        initData()
+    }, [isLoggedIn])
 
     const treatments = [
         { value: 'Acne Treatment', label: 'Acne Treatment' },
@@ -106,46 +160,52 @@ const ReservationPage = ({ isLoggedIn }) => {
         { value: 'Anti Aging', label: 'Anti Aging' }
     ]
 
-    const doctors = [
-        { value: 'dr. Widya', label: 'dr. Widya' },
-        { value: 'dr. Budi', label: 'dr. Budi' },
-        { value: '-', label: '-' }
-    ]
-
-    const schedules = [
-        { time: '07:00', status: 'available' },
-        { time: '08:00', status: 'booked' },
-        { time: '09:00', status: 'available' },
-        { time: '10:00', status: 'booked' },
-        { time: '11:00', status: 'booked' },
-        { time: '12:00', status: 'booked' },
-        { time: '13:00', status: 'available' },
-        { time: '14:00', status: 'available' },
-        { time: '15:00', status: 'booked' },
-        { time: '16:00', status: 'available' },
-        { time: '17:00', status: 'available' },
-        { time: '18:00', status: 'available' },
-    ]
-
-    const availableCount = schedules.filter(s => s.status === 'available').length
-    const bookedCount = schedules.filter(s => s.status === 'booked').length
-
-    const isDoctorAvailable = selectedDoctor !== '-'
+    const isDoctorAvailable = doctors.length > 0 && selectedDoctorId
 
     const handleSlotClick = (slot) => {
-        if (slot.status === 'available') {
-            setSelectedSlot(slot)
-            setBookingStep('detail')
-            window.scrollTo(0, 0)
-        }
+        // Assuming all fetched slots are 'available' for booking proposal since we lack availability check endpoint
+        // You might want to filter this based on real availability if backend supports it later
+        setSelectedSlot(slot)
+        setBookingStep('detail')
+        window.scrollTo(0, 0)
     }
 
-    const handleConfirmReservation = () => {
-        // Handle reservation logic here
-        setShowModal(false)
-        alert('Reservasi Berhasil!')
-        setBookingStep('schedule')
-        setSelectedSlot(null)
+    const handleConfirmReservation = async () => {
+        if (!customerName || !customerWa) {
+            alert('Mohon lengkapi Nama dan Nomor WhatsApp.')
+            return
+        }
+
+        try {
+            const payload = {
+                namaCustomer: customerName,
+                nomorWa: customerWa,
+                jenisTreatment: selectedTreatment, // string
+                tanggalReservasi: format(selectedDate, 'yyyy-MM-dd'),
+                idDokter: selectedDoctorId,
+                idJadwal: selectedSlot.idJadwal
+            }
+
+            console.log("Sending Reservation:", payload)
+
+            const response = await apiFetch('/api/reservasi', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+
+            console.log("Success:", response)
+            setShowModal(false)
+            alert('Reservasi Berhasil Dibuat!')
+            
+            // Reset
+            setBookingStep('schedule')
+            setSelectedSlot(null)
+
+        } catch (error) {
+            console.error("Reservation failed", error)
+            alert(`Gagal membuat reservasi: ${error.message || 'Error'}`)
+            setShowModal(false)
+        }
     }
 
     return (
@@ -162,7 +222,6 @@ const ReservationPage = ({ isLoggedIn }) => {
                                     Jadwal Reservasi Treatment <br /> Di Klinik Kecantikan Mische
                                 </h1>
                             </div>
-                            {/* Decorative Silhouette */}
                             <div className="absolute right-0 top-0 h-full w-1/3 opacity-20">
                                 <svg viewBox="0 0 200 200" className="h-full w-full" fill="currentColor">
                                     <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z" />
@@ -170,7 +229,7 @@ const ReservationPage = ({ isLoggedIn }) => {
                             </div>
                         </div>
 
-                        {/* Filters Row 1: Treatment & Doctor */}
+                        {/* Filters */}
                         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                             <CustomSelect
                                 label="Jenis Treatment"
@@ -180,15 +239,14 @@ const ReservationPage = ({ isLoggedIn }) => {
                             />
                             <CustomSelect
                                 label="Dokter Yang Menghandle"
-                                value={selectedDoctor}
+                                value={selectedDoctorId}
                                 options={doctors}
-                                onChange={setSelectedDoctor}
+                                onChange={setSelectedDoctorId}
                             />
                         </div>
 
-                        {/* Filters Row 2: Date & Stats */}
+                        {/* Date Filter */}
                         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-                            {/* Date */}
                             <div className="relative flex w-full items-center justify-between rounded-full bg-white px-4 py-2 shadow-sm">
                                 <span className="text-sm font-medium text-gray-600">Tanggal :</span>
                                 <div className="flex items-center gap-2">
@@ -197,8 +255,8 @@ const ReservationPage = ({ isLoggedIn }) => {
                                         onChange={(date) => setSelectedDate(date)}
                                         dateFormat="d MMMM yyyy"
                                         locale="id"
+                                        minDate={new Date()}
                                         className="cursor-pointer bg-transparent text-right text-sm font-bold text-black focus:outline-none w-32"
-                                        onKeyDown={(e) => e.preventDefault()}
                                         autoComplete="off"
                                     />
                                     <svg className="h-4 w-4 text-[#4aa731]" fill="currentColor" viewBox="0 0 20 20">
@@ -210,113 +268,101 @@ const ReservationPage = ({ isLoggedIn }) => {
                             <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
                                 <span className="mr-2 text-sm font-medium text-gray-600">Hari :</span> <span className="text-sm">{currentDayName}</span>
                             </div>
-                            <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
-                                <span className="mr-2 text-sm font-medium text-gray-600">Jadwal Kosong :</span> <span className="text-sm">{isDoctorAvailable ? availableCount : 0}</span>
-                            </div>
-                            <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
-                                <span className="mr-2 text-sm font-medium text-gray-600">Jadwal Terisi :</span> <span className="text-sm">{isDoctorAvailable ? bookedCount : 0}</span>
+                             <div className="flex w-full items-center justify-center rounded-full bg-white px-4 py-2 font-bold shadow-sm">
+                                <span className="mr-2 text-sm font-medium text-gray-600">Total Slot :</span> <span className="text-sm">{schedules.length}</span>
                             </div>
                         </div>
 
-                        {/* Main Content Area */}
+                        {/* Schedule Grid */}
                         <div className="min-h-[400px] rounded-[40px] bg-white p-8 shadow-xl">
-                            {isDoctorAvailable ? (
+                            {isDoctorAvailable && schedules.length > 0 ? (
                                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
                                     {schedules.map((slot, index) => (
                                         <div
                                             key={index}
                                             onClick={() => handleSlotClick(slot)}
-                                            className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition ${slot.status === 'available'
-                                                ? 'bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer'
-                                                : 'bg-white text-gray-400 border border-gray-200'
-                                                }`}
+                                            className={`flex flex-col items-center justify-center rounded-xl p-4 text-center transition bg-[#4aa731] text-white shadow-md hover:scale-105 cursor-pointer`}
                                         >
-                                            <span className="text-xl font-bold">{slot.time} WIB</span>
-                                            <div className={`mt-2 rounded-full px-4 py-1 text-xs font-bold ${slot.status === 'available' ? 'bg-white text-[#4aa731]' : 'bg-gray-300 text-white'
-                                                }`}>
-                                                {slot.status === 'available' ? 'Kosong' : 'Sudah Terisi'}
+                                            <span className="text-xl font-bold">{slot.jamMulai ? slot.jamMulai.slice(0,5) : slot.start} WIB</span>
+                                            <div className="mt-2 rounded-full px-4 py-1 text-xs font-bold bg-white text-[#4aa731]">
+                                                Tersedia
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="flex h-full flex-col items-center justify-center py-20">
-                                    <div className="mb-6 rounded-full border-4 border-[#4aa731] p-4">
-                                        <span className="text-6xl font-bold text-[#4aa731]">!</span>
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-black">Maaf Dokter Tidak Tersedia Hari Ini</h2>
+                                    <h2 className="text-2xl font-bold text-black">Jadwal atau Dokter Tidak Tersedia</h2>
                                 </div>
                             )}
                         </div>
                     </>
                 ) : (
                     <>
-                        {/* Banner Detail */}
+                        {/* Detail Step */}
                         <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#4aa731] to-[#65ce4d] p-8 text-white shadow-lg md:p-12">
-                            <div className="relative z-10 max-w-2xl">
-                                <h1 className="text-3xl font-bold leading-tight md:text-4xl">
-                                    Ayo Pilih Jenis <br /> Treatment Kamu!
-                                </h1>
-                            </div>
-                            {/* Decorative Silhouette */}
-                            <div className="absolute right-0 top-0 h-full w-1/3 opacity-20">
-                                <svg viewBox="0 0 200 200" className="h-full w-full" fill="currentColor">
-                                    <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z" />
-                                </svg>
-                            </div>
+                            <h1 className="text-3xl font-bold leading-tight md:text-4xl">Konfirmasi Data Reservasi</h1>
+                            <button onClick={() => setBookingStep('schedule')} className="mt-4 rounded-full bg-white/20 px-6 py-2 hover:bg-white/30">
+                                Kembali ke Jadwal
+                            </button>
                         </div>
 
-                        {/* Detail Form Card */}
                         <div className="rounded-[40px] bg-white p-8 shadow-xl md:p-12">
                             <div className="grid gap-x-8 gap-y-8 md:grid-cols-2">
-                                {/* Jam Mulai */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-lg font-medium text-black">Jam Mulai Treatment</label>
-                                    <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                        {selectedSlot?.time} WIB
+                                {/* Read Only Info */}
+                                <div className="md:col-span-2 grid md:grid-cols-2 gap-8 border-b pb-8">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">Waktu</label>
+                                        <div className="text-xl font-bold text-black">
+                                            {selectedSlot?.jamMulai?.slice(0,5)} - {selectedSlot?.jamSelesai?.slice(0,5)} WIB
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">Tanggal</label>
+                                        <div className="text-xl font-bold text-black">{formattedDate}</div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">Dokter</label>
+                                        <div className="text-xl font-bold text-black">
+                                            {doctors.find(d => d.value === selectedDoctorId)?.label}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">Treatment</label>
+                                        <div className="text-xl font-bold text-black">{selectedTreatment}</div>
                                     </div>
                                 </div>
 
-                                {/* Jam Selesai */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-lg font-medium text-black">Jam Selesai Treatment</label>
-                                    <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                        {selectedSlot?.time} WIB
+                                {/* Inputs for Required API Fields */}
+                                <div className="md:col-span-2 space-y-4">
+                                    <h3 className="font-bold text-lg">Data Diri (Dapat disesuaikan)</h3>
+                                    <div>
+                                        <label className="mb-2 block font-medium">Nama Lengkap</label>
+                                        <input 
+                                            type="text" 
+                                            value={customerName} 
+                                            onChange={e => setCustomerName(e.target.value)}
+                                            className="w-full rounded-xl border p-3 focus:outline-[#4aa731]"
+                                        />
                                     </div>
-                                </div>
-
-                                {/* Tanggal */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-lg font-medium text-black">Tanggal Treatment</label>
-                                    <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                        {formattedDate}
-                                    </div>
-                                </div>
-
-                                {/* Nama Dokter */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-lg font-medium text-black">Nama Dokter</label>
-                                    <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                        {selectedDoctor}
-                                    </div>
-                                </div>
-
-                                {/* Jenis Treatment */}
-                                <div className="flex flex-col gap-3 md:col-span-2">
-                                    <label className="text-lg font-medium text-black">Pilih Jenis Treatmen Kamu</label>
-                                    <div className="flex items-center justify-center rounded-full bg-white px-6 py-4 text-xl font-bold text-black shadow-md ring-1 ring-gray-100">
-                                        {selectedTreatment}
+                                    <div>
+                                        <label className="mb-2 block font-medium">Nomor WhatsApp</label>
+                                        <input 
+                                            type="text" 
+                                            value={customerWa} 
+                                            onChange={e => setCustomerWa(e.target.value)}
+                                            className="w-full rounded-xl border p-3 focus:outline-[#4aa731]"
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Button */}
                             <div className="mt-12 flex justify-center">
                                 <button
                                     onClick={() => setShowModal(true)}
-                                    className="w-full max-w-md rounded-full bg-[#53c41a] py-4 text-lg font-bold text-white shadow-lg transition hover:bg-[#4aa731] hover:shadow-xl"
+                                    className="w-full max-w-md rounded-full bg-[#53c41a] py-4 text-lg font-bold text-white shadow-lg transition hover:bg-[#4aa731]"
                                 >
-                                    Reservasi Sekarang
+                                    Buat Reservasi
                                 </button>
                             </div>
                         </div>

@@ -33,26 +33,54 @@ import ClinicProfilePage from './pages/ClinicProfilePage'
 const App = () => {
   // Initialize state based on token existence
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'))
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('role'))
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
+    setUserRole(localStorage.getItem('role'))
   }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
+    localStorage.removeItem('role')
     setIsLoggedIn(false)
+    setUserRole(null)
+  }
+
+  // Helper for Admin Only Routes
+  const AdminRoute = ({ children }) => {
+    if (!isLoggedIn) return <Navigate to="/login" />
+    // Check state (or storage fallback) for robustness
+    const role = userRole || localStorage.getItem('role')
+    if (role?.toLowerCase() !== 'admin') return <Navigate to="/" />
+    return children
+  }
+
+  // Redirect logic after login
+  const getLoginRedirect = () => {
+      // Read directly from storage to ensure we have the latest value set by LoginPage
+      const role = localStorage.getItem('role')
+      return role?.toLowerCase() === 'admin' ? '/dashboard' : '/'
   }
 
   return (
     <Routes>
       <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} />} />
       <Route path="/login" element={
-        isLoggedIn ? <Navigate to="/" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
+        isLoggedIn ? <Navigate to={getLoginRedirect()} /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
       } />
       <Route path="/register" element={<RegistrationPage />} />
       <Route path="/profile" element={
         isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /> : <Navigate to="/login" />
+      } />
+      
+      {/* Specific Routes for History */}
+      <Route path="/riwayat-reservasi" element={
+        isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} initialTab="reservation_history" /> : <Navigate to="/login" />
+      } />
+      <Route path="/riwayat-pembelian" element={
+        isLoggedIn ? <ProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} initialTab="product_history" /> : <Navigate to="/login" />
       } />
       <Route path="/promo" element={<PromoPage isLoggedIn={isLoggedIn} />} />
       <Route path="/promo-detail" element={<PromoDetailPage isLoggedIn={isLoggedIn} />} />
@@ -67,22 +95,30 @@ const App = () => {
       
       {/* Protected Reservation Route */}
       <Route path="/reservation" element={
-        isLoggedIn ? <ReservationPage isLoggedIn={isLoggedIn} /> : <Navigate to="/login" state={{ from: '/reservation' }} />
+        isLoggedIn ? (
+             // Redirect admin to admin reservation management page
+             (userRole || localStorage.getItem('role'))?.toLowerCase() === 'admin' 
+             ? <Navigate to="/reservations" /> 
+             : <ReservationPage isLoggedIn={isLoggedIn} />
+        ) : <Navigate to="/login" state={{ from: '/reservation' }} />
       } />
       
       <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
-      <Route path="/dashboard" element={<DashboardPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/products" element={<ProductManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/promos" element={<PromoManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/events" element={<EventManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/sales" element={<SalesDataPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/doctor" element={<DoctorProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/users" element={<UserManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/reservations" element={<TreatmentReservationPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/schedules" element={<ScheduleReservationPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/categories" element={<ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/testimonials" element={<TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
-      <Route path="/clinic-profile" element={<ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} />} />
+      
+      {/* Admin Routes */}
+      <Route path="/dashboard" element={<AdminRoute><DashboardPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/products" element={<AdminRoute><ProductManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/promos" element={<AdminRoute><PromoManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/events" element={<AdminRoute><EventManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/sales" element={<AdminRoute><SalesDataPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/doctor" element={<AdminRoute><DoctorProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/users" element={<AdminRoute><UserManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/reservations" element={<AdminRoute><TreatmentReservationPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/schedules" element={<AdminRoute><ScheduleReservationPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/categories" element={<AdminRoute><ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/testimonials" element={<AdminRoute><TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/clinic-profile" element={<AdminRoute><ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

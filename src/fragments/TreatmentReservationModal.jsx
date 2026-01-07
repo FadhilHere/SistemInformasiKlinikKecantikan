@@ -4,7 +4,7 @@ import { apiFetch } from '../lib/api';
 
 const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
-        idUser: '',
+        namaCustomer: '',
         nomorWa: '',
         idDokter: '',
         idJadwal: '',
@@ -18,56 +18,13 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
     const [schedules, setSchedules] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(false);
 
-    // Helper function to convert date to yyyy-MM-dd format
-    const formatDateForInput = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    // Fetch dropdown data
-    useEffect(() => {
-        const fetchDropdownData = async () => {
-            if (!isOpen) return;
-
-            try {
-                setIsLoadingData(true);
-
-                // Fetch customers
-                const usersRes = await apiFetch('/api/users');
-                const usersList = usersRes?.data || usersRes || [];
-                setCustomers(Array.isArray(usersList) ? usersList : []);
-
-                // Fetch doctors
-                const doctorsRes = await apiFetch('/api/profil-dokter');
-                const doctorsList = doctorsRes?.data || doctorsRes || [];
-                setDoctors(Array.isArray(doctorsList) ? doctorsList : []);
-
-                // Fetch schedules from jadwal-reservasi
-                const schedulesRes = await apiFetch('/api/jadwal-reservasi');
-                const schedulesList = schedulesRes?.data || schedulesRes || [];
-                setSchedules(Array.isArray(schedulesList) ? schedulesList : []);
-
-            } catch (err) {
-                console.error('Failed to fetch dropdown data:', err);
-            } finally {
-                setIsLoadingData(false);
-            }
-        };
-
-        fetchDropdownData();
-    }, [isOpen]);
+    // ... useEffect for data fetching ... (customers fetch might be removable if not used elsewhere, but let's leave it for now or remove if unused)
 
     useEffect(() => {
         if (isOpen) {
             if (mode === 'edit' && initialData) {
                 setFormData({
-                    idUser: initialData.idUser || '',
+                    namaCustomer: initialData.namaCustomer || initialData.nama || '',
                     nomorWa: initialData.nomorWa || '',
                     idDokter: initialData.idDokter || '',
                     idJadwal: initialData.idJadwal || '',
@@ -77,7 +34,7 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                 });
             } else {
                 setFormData({
-                    idUser: '',
+                    namaCustomer: '',
                     nomorWa: '',
                     idDokter: '',
                     idJadwal: '',
@@ -98,24 +55,13 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // Get customer name from selected idUser
-        const selectedCustomer = customers.find(c => String(c.idUser) === String(formData.idUser));
-        const namaCustomer = selectedCustomer ? selectedCustomer.nama : '';
-
-        // Include namaCustomer in submission
-        const submitData = {
-            ...formData,
-            namaCustomer
-        };
-
-        onSubmit(submitData);
+        onSubmit(formData);
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden m-4 max-h-[90vh] overflow-y-auto">
-                {/* Header */}
+                {/* Header ... */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
                     <h2 className="text-xl font-bold text-gray-900">
                         {mode === 'add' ? 'Tambah Reservasi' : 'Edit Reservasi'}
@@ -132,22 +78,16 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                 <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-700">Customer</label>
-                            <select
-                                name="idUser"
-                                value={formData.idUser}
+                            <label className="text-sm font-medium text-gray-700">Nama Customer</label>
+                            <input
+                                type="text"
+                                name="namaCustomer"
+                                value={formData.namaCustomer}
                                 onChange={handleChange}
+                                placeholder="Nama Lengkap"
                                 required
-                                disabled={isLoadingData}
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                            >
-                                <option value="">Pilih Customer</option>
-                                {customers.map(customer => (
-                                    <option key={customer.idUser} value={customer.idUser}>
-                                        {customer.nama}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-700">Nomor WhatsApp</label>
@@ -228,6 +168,7 @@ const TreatmentReservationModal = ({ isOpen, onClose, mode = 'add', initialData,
                                 value={formData.tanggalReservasi}
                                 onChange={handleChange}
                                 required
+                                min={new Date().toISOString().split('T')[0]} 
                                 className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                             />
                         </div>

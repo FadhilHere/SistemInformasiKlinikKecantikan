@@ -166,7 +166,7 @@ const TreatmentReservationTable = () => {
     const filteredReservations = reservations.filter((reservation) => {
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
-        const customerName = getCustomerName(reservation.idUser).toLowerCase();
+        const customerName = (reservation.namaCustomer || getCustomerName(reservation.idUser) || '').toLowerCase();
         const doctorName = getDoctorName(reservation.idDokter).toLowerCase();
         const jenisTreatment = (reservation.jenisTreatment || '').toLowerCase();
         return customerName.includes(query) || doctorName.includes(query) || jenisTreatment.includes(query);
@@ -194,7 +194,7 @@ const TreatmentReservationTable = () => {
         const headers = ['No', 'Nama Customer', 'Nomor WA', 'Jenis Treatment', 'Tanggal Reservasi', 'Dokter', 'Status'];
         const data = dataToExport.map((res, index) => [
             index + 1,
-            getCustomerName(res.idUser),
+            res.namaCustomer || getCustomerName(res.idUser) || '-',
             res.nomorWa || '-',
             res.jenisTreatment || '-',
             formatDate(res.tanggalReservasi),
@@ -358,7 +358,7 @@ const TreatmentReservationTable = () => {
                             {filteredReservations.map((reservation, index) => (
                                 <tr key={reservation.idReservasi || reservation.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                     <td className="py-4 px-6 text-gray-400">{index + 1}</td>
-                                    <td className="py-4 px-6 font-medium text-gray-900">{getCustomerName(reservation.idUser)}</td>
+                                    <td className="py-4 px-6 font-medium text-gray-900">{reservation.namaCustomer || getCustomerName(reservation.idUser)}</td>
                                     <td className="py-4 px-6 text-gray-500">{reservation.nomorWa}</td>
                                     <td className="py-4 px-6 text-gray-500">{reservation.jenisTreatment}</td>
                                     <td className="py-4 px-6 text-gray-500 whitespace-nowrap">{formatDate(reservation.tanggalReservasi)}</td>

@@ -42,15 +42,31 @@ const LoginPage = ({ onLoginSuccess }) => {
       if (data?.token) {
         localStorage.setItem('token', data.token)
       }
-      if (data?.user?.id) {
-        localStorage.setItem('userId', String(data.user.id))
+
+      // 1. Try to get user from login response
+      let user = data?.user || data?.data?.user
+
+      // 2. If user/role missing, fetch profile
+      if (!user || !user.role) {
+        try {
+            const meRes = await apiFetch('/api/me')
+            user = meRes.data || meRes.user || meRes
+        } catch (e) {
+            console.error('Failed to fetch user profile:', e)
+        }
+      }
+
+      // 3. Save User Info
+      if (user) {
+        if (user.id) localStorage.setItem('userId', String(user.id))
+        if (user.role) localStorage.setItem('role', user.role)
       }
 
       setStatusMessage('Login berhasil.')
       if (onLoginSuccess) onLoginSuccess()
     } catch (error) {
-      const message =
-        error?.data?.message || 'Email atau password salah.'
+      console.error(error)
+      const message = error?.data?.message || 'Email atau password salah.'
       setStatusMessage(message)
     } finally {
       setIsSubmitting(false)

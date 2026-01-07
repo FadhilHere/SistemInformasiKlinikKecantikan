@@ -1,8 +1,86 @@
+import { useState, useEffect } from 'react'
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import Button from '../components/atoms/Button'
+import { apiFetch, API_BASE_URL } from '../lib/api'
 
 const AboutPage = ({ isLoggedIn }) => {
+    const [profile, setProfile] = useState(null)
+    const [doctorCount, setDoctorCount] = useState(0)
+    const [activities, setActivities] = useState([])
+    const [activeActivityIndex, setActiveActivityIndex] = useState(0)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchAboutData = async () => {
+            try {
+                setLoading(true)
+                
+                // Fetch Company Profile
+                try {
+                    const profileRes = await apiFetch('/api/profil-perusahaan')
+                    const profileData = profileRes.data || profileRes || []
+                    if (Array.isArray(profileData) && profileData.length > 0) {
+                        setProfile(profileData[0])
+                    }
+                } catch (e) { console.error("Err fetch profile", e) }
+
+                // Fetch Doctor Count
+                try {
+                    const doctorRes = await apiFetch('/api/profil-dokter')
+                    const doctorData = doctorRes.data || doctorRes || []
+                    if (Array.isArray(doctorData)) {
+                        setDoctorCount(doctorData.length)
+                    }
+                } catch (e) { console.error("Err fetch doctor count", e) }
+
+                // Fetch Activities (Kegiatan)
+                try {
+                    // Assuming endpoint is /api/kegiatan based on KegiatanController
+                    const activityRes = await apiFetch('/api/kegiatan')
+                    const activityData = activityRes.data || activityRes || []
+                    if (Array.isArray(activityData)) {
+                        setActivities(activityData)
+                    }
+                } catch (e) { console.error("Err fetch activities", e) }
+
+            } catch (error) {
+                console.error("Failed to fetch page data:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        
+        fetchAboutData()
+    }, [])
+
+    const handleNextActivity = () => {
+        if (activities.length === 0) return
+        setActiveActivityIndex((prev) => (prev + 1) % activities.length)
+    }
+
+    const handlePrevActivity = () => {
+        if (activities.length === 0) return
+        setActiveActivityIndex((prev) => (prev === 0 ? activities.length - 1 : prev - 1))
+    }
+
+    const getImageUrl = (path) => {
+        if (!path) return 'https://placehold.co/1200x800/e2e8f0/1e293b?text=No+Image';
+        if (path.startsWith('http')) return path;
+        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+        return `${API_BASE_URL}/storage/${cleanPath}`;
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-white font-sans flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#4aa731]"></div>
+            </div>
+        )
+    }
+
+    const currentActivity = activities[activeActivityIndex]
+
     return (
         <div className="min-h-screen bg-white font-sans">
             <Navbar isLoggedIn={isLoggedIn} />
@@ -41,7 +119,7 @@ const AboutPage = ({ isLoggedIn }) => {
                 <section className="mx-auto max-w-6xl px-4 py-16">
                     <h2 className="mb-6 text-3xl font-bold text-black">Mische Clinic</h2>
                     <p className="text-justify text-lg leading-relaxed text-gray-600">
-                        Dengan Rangkaian Produk Yang Diformulasikan Khusus Untuk Perawatan Kulit Wajah, MISCHE Skincare Menghadirkan Manfaat Lengkap Yang Dibutuhkan Kulitmu. Mulai Dari Mencerahkan Warna Kulit, Menjaga Kelembapan Optimal, Hingga Mengatasi Tanda-Tanda Penuaan Dini. Produk Klinik Mische Juga Efektif Dalam Merawat Kulit Berjerawat Dan Membantu Mengembalikan Kilau Alami Wajahmu. Jangan Harga Yang Terjangkau, Klinik Mische Menjadi Pilihan Tepat Bagi Kamu Yang Ingin Merawat Kulit Secara Menyeluruh Dan Tampil Percaya Diri Setiap Hari.
+                        {profile?.deskripsiPerusahaan || "-"}
                     </p>
                 </section>
 
@@ -62,13 +140,13 @@ const AboutPage = ({ isLoggedIn }) => {
                             <div>
                                 <h3 className="mb-4 text-2xl font-bold text-black">Visi</h3>
                                 <p className="text-gray-600">
-                                    Dengan Rangkaian Produk Yang Diformulasikan Khusus Untuk Perawatan Kulit Wajah, MISCHE Skincare Menghadirkan Manfaat Lengkap Yang Dibutuhkan Kulitmu. Mulai Dari Mencerahkan Warna Kulit, Menjaga Kelembapan Optimal.
+                                    {profile?.visi || "-"}
                                 </p>
                             </div>
                             <div>
                                 <h3 className="mb-4 text-2xl font-bold text-black">Misi</h3>
                                 <p className="text-gray-600">
-                                    Dengan Rangkaian Produk Yang Diformulasikan Khusus Untuk Perawatan Kulit Wajah, MISCHE Skincare Menghadirkan Manfaat Lengkap Yang Dibutuhkan Kulitmu. Mulai Dari Mencerahkan Warna Kulit, Menjaga Kelembapan Optimal.
+                                    {profile?.misi || "-"}
                                 </p>
                             </div>
                         </div>
@@ -87,7 +165,9 @@ const AboutPage = ({ isLoggedIn }) => {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-black">Jam Operasional</h3>
-                                <p className="text-2xl font-bold text-black">07:00 - 18:00 WIB</p>
+                                <p className="text-2xl font-bold text-black">
+                                    {profile?.jamBukak ? `${profile.jamBukak.substring(0,5)} - ${profile.jamKeluar.substring(0,5)} WIB` : '-'}
+                                </p>
                             </div>
                         </div>
 
@@ -100,7 +180,7 @@ const AboutPage = ({ isLoggedIn }) => {
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-black">Jumlah Dokter</h3>
-                                <p className="text-2xl font-bold text-black">2 Dokter Aktif</p>
+                                <p className="text-2xl font-bold text-black">{doctorCount} Dokter Aktif</p>
                             </div>
                         </div>
                     </div>
@@ -116,38 +196,71 @@ const AboutPage = ({ isLoggedIn }) => {
                         <h2 className="mb-4 text-3xl font-bold">Perawatan Terbaik.</h2>
                         <p className="mb-12 text-sm font-medium tracking-widest opacity-80">#BEING BEAUTY WITH MISCHE</p>
 
-                        {/* Main Slider */}
-                        <div className="relative mx-auto mb-8 h-[400px] w-full max-w-4xl overflow-hidden rounded-3xl shadow-2xl">
-                            <img
-                                src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80"
-                                alt="Activity Main"
-                                className="h-full w-full object-cover"
-                            />
-                            {/* Arrows */}
-                            <button className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 hover:bg-white/40">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-8 w-8 text-white">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                </svg>
-                            </button>
-                            <button className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 p-2 hover:bg-white/40">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-8 w-8 text-white">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
-                            </button>
-                        </div>
+                         {activities.length > 0 ? (
+                            <>
+                                {/* Main Slider */}
+                                <div className="relative mx-auto mb-8 h-[400px] w-full max-w-4xl overflow-hidden rounded-3xl shadow-2xl bg-gray-800">
+                                    <img
+                                        src={getImageUrl(currentActivity?.foto)}
+                                        alt={currentActivity?.namaKegiatan || "Activity"}
+                                        className="h-full w-full object-cover transition-opacity duration-300"
+                                    />
+                                    {/* Caption Overlay - Optional */}
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-left">
+                                         <h3 className="text-xl font-bold text-white">{currentActivity?.namaKegiatan}</h3>
+                                         <p className="text-sm text-gray-200 line-clamp-2">{currentActivity?.deskripsi}</p>
+                                    </div>
 
-                        {/* Thumbnails */}
-                        <div className="mx-auto mb-12 grid max-w-4xl grid-cols-3 gap-4">
-                            <div className="h-32 overflow-hidden rounded-xl">
-                                <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=400&q=80" className="h-full w-full object-cover" alt="Thumb 1" />
-                            </div>
-                            <div className="h-32 overflow-hidden rounded-xl">
-                                <img src="https://images.unsplash.com/photo-1581056771107-24ca5f033842?auto=format&fit=crop&w=400&q=80" className="h-full w-full object-cover" alt="Thumb 2" />
-                            </div>
-                            <div className="h-32 overflow-hidden rounded-xl">
-                                <img src="https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=400&q=80" className="h-full w-full object-cover" alt="Thumb 3" />
-                            </div>
-                        </div>
+                                    {/* Arrows */}
+                                    <button 
+                                        onClick={handlePrevActivity}
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 hover:bg-black/50 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-8 w-8 text-white">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onClick={handleNextActivity}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 hover:bg-black/50 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-8 w-8 text-white">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Thumbnails - Show 3 items or as many as available */}
+                                <div className="mx-auto mb-12 grid max-w-4xl grid-cols-3 gap-4">
+                                    {[0, 1, 2].map((offset) => {
+                                        // Simple logic to show next 3 items, wrapping around
+                                        const index = (activeActivityIndex + offset + 1) % activities.length;
+                                        // Avoid showing duplicates if total items < 4 (simplification)
+                                        if (activities.length <= 1 && offset > 0) return null;
+                                        if (activities.length <= 2 && offset > 1) return null;
+                                        
+                                        const item = activities[index];
+                                        return (
+                                            <div 
+                                                key={item.idKegiatan || index} 
+                                                className="h-32 overflow-hidden rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
+                                                onClick={() => setActiveActivityIndex(index)}
+                                            >
+                                                <img 
+                                                    src={getImageUrl(item.foto)} 
+                                                    className="h-full w-full object-cover" 
+                                                    alt={item.namaKegiatan} 
+                                                />
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </>
+                         ) : (
+                             <div className="py-12 bg-white/10 rounded-xl mb-12">
+                                 <p className="text-white">Belum ada kegiatan yang ditampilkan.</p>
+                             </div>
+                         )}
 
                         <Button className="rounded-full bg-white px-8 py-3 text-[#4aa731] hover:bg-gray-100">
                             Lihat Lainnya

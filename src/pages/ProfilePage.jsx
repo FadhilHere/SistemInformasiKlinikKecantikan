@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
 import DatePicker from "react-datepicker"
@@ -9,10 +10,16 @@ import {
     sanitizeInput
 } from '../utils/validators'
 import { apiFetch } from '../lib/api'
-import { useEffect } from 'react'
 
-const ProfilePage = ({ isLoggedIn, onLogout }) => {
-    const [activeTab, setActiveTab] = useState('profile') // 'profile' | 'reservation_history'
+
+const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
+    const navigate = useNavigate()
+    const [activeTab, setActiveTab] = useState(initialTab) // 'profile' | 'reservation_history' | 'product_history'
+
+    // Update activeTab when initialTab prop changes (e.g. routing)
+    useEffect(() => {
+        setActiveTab(initialTab)
+    }, [initialTab])
 
     // Form States
     const [name, setName] = useState("")
@@ -23,18 +30,21 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
+    const [oldPassword, setOldPassword] = useState("") // New state
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' })
+    const [userId, setUserId] = useState(null) // New state
 
     useEffect(() => {
         if (isLoggedIn) {
             const fetchProfile = async () => {
                 try {
                     const user = await apiFetch('/api/me');
+                    if (user.id) setUserId(user.id);
                     setName(user.nama || '');
                     setAddress(user.alamat || '');
-                    setBirthDate(user.tanggalLahir ? new Date(user.tanggalLahir) : null);
-                    setGender(user.jenisKelamin || 'Perempuan');
-                    setWhatsapp(user.nomorWa || '');
+                    setBirthDate(user.tanggalLahir || user.tanggal_lahir ? new Date(user.tanggalLahir || user.tanggal_lahir) : null);
+                    setGender(user.jenisKelamin || user.jenis_kelamin || 'Perempuan');
+                    setWhatsapp(user.nomorWa || user.nomor_wa || '');
                     setEmail(user.email || '');
                 } catch (error) {
                     console.error("Failed to fetch profile", error);
@@ -93,68 +103,153 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
         setStatusMessage({ type: 'success', text: 'Profil berhasil diperbarui!' })
     }
 
-    const reservationHistory = [
-        {
-            code: 'P01',
-            date: '25 Desember 2025',
-            time: '09.00 - 10.00',
-            treatment: 'Acne',
-            status: 'Terkonfirmasi',
-            statusColor: 'bg-[#53c41a]',
-            canEdit: true
-        },
-        {
-            code: 'P02',
-            date: '23 Desember 2025',
-            time: '09.00 - 10.00',
-            treatment: 'Bopeng',
-            status: 'Belum Di Konfirmasi',
-            statusColor: 'bg-[#b69036]',
-            canEdit: true
-        },
-        {
-            code: 'P03',
-            date: '5 Desember 2025',
-            time: '09.00 - 10.00',
-            treatment: 'Acne',
-            status: 'Terkonfirmasi Merubah Jadwal',
-            statusColor: 'bg-[#53c41a]',
-            canEdit: false
-        },
-        {
-            code: 'P04',
-            date: '15 Desember 2025',
-            time: '09.00 - 10.00',
-            treatment: 'Bopeng',
-            status: 'Belum Di Konfirmasi Merubah Jadwal',
-            statusColor: 'bg-[#b69036]',
-            canEdit: false
-        },
-    ]
+    // (Removed duplicate reservationHistory)
 
-    const productHistory = [
-        {
-            code: 'P01',
-            date: '25 Desember 2025',
-            total: 'Rp 700.000',
-            status: 'Sedang Di Proses',
-            statusColor: 'bg-[#b69036]'
-        },
-        {
-            code: 'P02',
-            date: '26 Desember 2025',
-            total: 'Rp 160.000',
-            status: 'Selesai',
-            statusColor: 'bg-[#53c41a]'
-        },
-        {
-            code: 'P03',
-            date: '29 Desember 2025',
-            total: 'Rp 70.000',
-            status: 'Selesai',
-            statusColor: 'bg-[#53c41a]'
-        },
-    ]
+    // Product History State
+    const [productHistory, setProductHistory] = useState([])
+    const [loadingProductHistory, setLoadingProductHistory] = useState(false)
+
+    useEffect(() => {
+        if (activeTab === 'product_history' && isLoggedIn) {
+            const fetchProductHistory = async () => {
+                setLoadingProductHistory(true)
+                try {
+                    const response = await apiFetch('/api/penjualan')
+                    if (response.success && Array.isArray(response.data)) {
+                        setProductHistory(response.data)
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch product history", error)
+                } finally {
+                    setLoadingProductHistory(false)
+                }
+            }
+            fetchProductHistory()
+        }
+    }, [activeTab, isLoggedIn])
+
+    // Helper functions for formatting
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+    }
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '-'
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        })
+    }
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'pending': return 'bg-yellow-500'
+            case 'paid': return 'bg-blue-500'
+            case 'shipped': return 'bg-indigo-500'
+            case 'completed': return 'bg-[#53c41a]'
+            case 'cancelled': return 'bg-red-500'
+            default: return 'bg-gray-400'
+        }
+    }
+
+    // Reservation State
+    const [reservations, setReservations] = useState([])
+    const [isLoadingReservations, setIsLoadingReservations] = useState(false)
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false)
+    const [selectedReservation, setSelectedReservation] = useState(null)
+    const [newDate, setNewDate] = useState(new Date())
+    const [selectedSlotId, setSelectedSlotId] = useState('')
+    const [availableSlots, setAvailableSlots] = useState([])
+
+    // Fetch Reservations
+    useEffect(() => {
+        if (activeTab === 'reservation_history' && isLoggedIn) {
+            const fetchReservations = async () => {
+                setIsLoadingReservations(true)
+                try {
+                    const response = await apiFetch('/api/reservasi')
+                    console.log('Raw Reservation Response:', response) // DEBUG
+
+                    // Flexible extraction
+                    let data = []
+                    if (Array.isArray(response)) {
+                        data = response
+                    } else if (response.data && Array.isArray(response.data)) {
+                        data = response.data
+                    } else if (response.reservasi && Array.isArray(response.reservasi)) {
+                         data = response.reservasi
+                    }
+
+                    console.log('Extracted Reservation Data:', data) // DEBUG
+                    setReservations(data)
+                    
+                } catch (error) {
+                    console.error("Failed to fetch reservations", error)
+                } finally {
+                    setIsLoadingReservations(false)
+                }
+            }
+            fetchReservations()
+        }
+    }, [activeTab, isLoggedIn])
+
+    // Fetch Available Slots for Rescheduling
+    useEffect(() => {
+        const fetchSlots = async () => {
+            try {
+                const response = await apiFetch('/api/jadwal-reservasi')
+                const data = response.data || response
+                if (Array.isArray(data)) {
+                    setAvailableSlots(data)
+                }
+            } catch (error) {
+                console.error("Failed to fetch slots", error)
+            }
+        }
+        if (isLoggedIn) fetchSlots()
+    }, [isLoggedIn])
+
+    const handleEditClick = (reservation) => {
+        setSelectedReservation(reservation)
+        setNewDate(reservation.tanggal ? new Date(reservation.tanggal) : new Date())
+        setSelectedSlotId(reservation.idJadwal || '')
+        setIsRescheduleModalOpen(true)
+    }
+
+    const handleSaveReschedule = async () => {
+        if (!selectedReservation || !newDate || !selectedSlotId) {
+             setStatusMessage({ type: 'error', text: 'Mohon lengkapi tanggal dan jam baru.' })
+             return
+        }
+
+        try {
+            const formattedDate = newDate.toISOString().split('T')[0]
+            
+            await apiFetch(`/api/reservasi/${selectedReservation.idReservasi}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    tanggalReservasi: formattedDate,
+                    idJadwal: selectedSlotId,
+                    // Preserve other fields if backend requires them, but usually PUT accepts partial or we send what we change
+                    idDokter: selectedReservation.idDokter, 
+                    idTreatment: selectedReservation.idTreatment
+                })
+            })
+
+            setStatusMessage({ type: 'success', text: 'Jadwal reservasi berhasil diubah.' })
+            setIsRescheduleModalOpen(false)
+            
+            // Refresh List
+            const response = await apiFetch('/api/reservasi')
+            const data = response.data || response
+            if (Array.isArray(data)) {
+                 setReservations(data)
+            }
+
+        } catch (error) {
+            console.error("Reschedule error:", error)
+            setStatusMessage({ type: 'error', text: 'Gagal mengubah jadwal.' })
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#f9f9f9] font-sans">
@@ -187,7 +282,7 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                 {activeTab === 'profile' && (
                     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
                         <button
-                            onClick={() => setActiveTab('product_history')}
+                            onClick={() => navigate('/riwayat-pembelian')}
                             className="flex items-center justify-center gap-4 rounded-[20px] bg-white p-6 shadow-md transition hover:shadow-lg"
                         >
                             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#4aa731]/10">
@@ -202,7 +297,7 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                         </button>
 
                         <button
-                            onClick={() => setActiveTab('reservation_history')}
+                            onClick={() => navigate('/riwayat-reservasi')}
                             className="flex items-center justify-center gap-4 rounded-[20px] bg-white p-6 shadow-md transition hover:shadow-lg"
                         >
                             <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#4aa731] bg-white">
@@ -320,29 +415,50 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                                     </div>
                                 </div>
 
-                                {/* Password */}
-                                <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-4">
-                                    <label className="font-bold text-black md:col-span-1">Password <span className="float-right hidden md:inline">:</span></label>
-                                    <div className="md:col-span-3">
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
-                                        />
+                                {/* Change Password Section */}
+                                <div className="mt-6 border-t pt-6">
+                                    <h3 className="mb-4 text-lg font-bold text-gray-700">Ubah Password (Opsional)</h3>
+                                    
+                                    {/* Old Password */}
+                                    <div className="mb-4 grid grid-cols-1 items-center gap-4 md:grid-cols-4">
+                                        <label className="font-bold text-black md:col-span-1">Password Lama <span className="float-right hidden md:inline">:</span></label>
+                                        <div className="md:col-span-3">
+                                            <input
+                                                type="password"
+                                                value={oldPassword}
+                                                onChange={(e) => setOldPassword(e.target.value)}
+                                                placeholder="Masukkan password lama jika ingin mengubah"
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Confirm Password */}
-                                <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-4">
-                                    <label className="font-bold text-black md:col-span-1">Konfirmasi Password <span className="float-right hidden md:inline">:</span></label>
-                                    <div className="md:col-span-3">
-                                        <input
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
-                                        />
+                                    {/* New Password */}
+                                    <div className="mb-4 grid grid-cols-1 items-center gap-4 md:grid-cols-4">
+                                        <label className="font-bold text-black md:col-span-1">Password Baru <span className="float-right hidden md:inline">:</span></label>
+                                        <div className="md:col-span-3">
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="Password baru"
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Confirm New Password */}
+                                    <div className="grid grid-cols-1 items-center gap-4 md:grid-cols-4">
+                                        <label className="font-bold text-black md:col-span-1">Konfirmasi Baru <span className="float-right hidden md:inline">:</span></label>
+                                        <div className="md:col-span-3">
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="Ulangi password baru"
+                                                className="w-full rounded-xl border border-gray-200 bg-white px-6 py-3 shadow-inner focus:border-[#4aa731] focus:outline-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -399,40 +515,49 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="text-base font-medium text-black">
-                                    {reservationHistory.map((item, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="p-4">{item.code}</td>
-                                            <td className="p-4">{item.date}</td>
-                                            <td className="p-4">{item.time}</td>
-                                            <td className="p-4">{item.treatment}</td>
-                                            <td className="p-4">
-                                                <div className="flex justify-center">
-                                                    <span className={`rounded-full px-6 py-2 text-white shadow-md ${item.statusColor} max-w-[200px] leading-tight`}>
-                                                        {item.status}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex justify-center">
-                                                    {item.canEdit ? (
-                                                        <button className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]">
-                                                            Ubah Jadwal
-                                                        </button>
-                                                    ) : (
-                                                        <button disabled className="cursor-not-allowed rounded-full bg-[#cfcfcf] px-6 py-2 text-white shadow-md">
-                                                            Ubah Jadwal
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {isLoadingReservations ? (
+                                        <tr><td colSpan="6" className="p-8 text-center text-gray-500">Memuat reservasi...</td></tr>
+                                    ) : reservations.length > 0 ? (
+                                        reservations.map((item, index) => (
+                                            <tr key={index} className="hover:bg-gray-50">
+                                                <td className="p-4">R-{item.idReservasi}</td>
+                                                <td className="p-4">{formatDate(item.tanggalReservasi)}</td>
+                                                <td className="p-4">{item.schedule?.waktuMulai ? `${item.schedule.waktuMulai.slice(0,5)} - ${item.schedule.waktuSelesai.slice(0,5)}` : '-'}</td>
+                                                <td className="p-4">{item.treatment?.namaTreatment || '-'}</td>
+                                                <td className="p-4">
+                                                    <div className="flex justify-center">
+                                                        <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} max-w-[200px] leading-tight capitalize`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex justify-center">
+                                                        {item.status === 'pending' || item.status === 'confirmed' ? ( // Example logic
+                                                            <button 
+                                                                onClick={() => handleEditClick(item)}
+                                                                className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]"
+                                                            >
+                                                                Ubah Jadwal
+                                                            </button>
+                                                        ) : (
+                                                            <button disabled className="cursor-not-allowed rounded-full bg-[#cfcfcf] px-6 py-2 text-white shadow-md">
+                                                                Ubah Jadwal
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr><td colSpan="6" className="p-8 text-center text-gray-500">Belum ada reservasi.</td></tr>
+                                    )}
                                 </tbody>
                             </table>
 
                             <div className="mt-8 flex justify-start">
                                 <button
-                                    onClick={() => setActiveTab('profile')}
+                                    onClick={() => navigate('/profile')}
                                     className="flex items-center gap-2 font-bold text-[#4aa731] hover:underline"
                                 >
                                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -440,6 +565,58 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                                     </svg>
                                     Kembali ke Profil
                                 </button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Reschedule Modal */}
+                    {isRescheduleModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                                <h3 className="mb-4 text-xl font-bold text-gray-800">Ubah Jadwal Reservasi</h3>
+                                
+                                <div className="mb-4 space-y-4">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-semibold text-gray-700">Tanggal Baru</label>
+                                        <DatePicker
+                                            selected={newDate}
+                                            onChange={(date) => setNewDate(date)}
+                                            dateFormat="dd/MM/yyyy"
+                                            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="mb-1 block text-sm font-semibold text-gray-700">Waktu (Slot)</label>
+                                        <select
+                                            value={selectedSlotId}
+                                            onChange={(e) => setSelectedSlotId(e.target.value)}
+                                            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
+                                        >
+                                            <option value="">Pilih Slot Waktu</option>
+                                            {availableSlots.map(slot => (
+                                                <option key={slot.idJadwal} value={slot.idJadwal}>
+                                                    {slot.waktuMulai ? slot.waktuMulai.slice(0, 5) : slot.start_time} - {slot.waktuSelesai ? slot.waktuSelesai.slice(0, 5) : slot.end_time}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setIsRescheduleModalOpen(false)}
+                                        className="rounded-full bg-gray-200 px-6 py-2 font-bold text-gray-700 hover:bg-gray-300"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        onClick={handleSaveReschedule}
+                                        className="rounded-full bg-[#4aa731] px-6 py-2 font-bold text-white shadow-md hover:bg-[#3d8c29]"
+                                    >
+                                        Simpan
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -456,26 +633,36 @@ const ProfilePage = ({ isLoggedIn, onLogout }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="text-base font-medium text-black">
-                                    {productHistory.map((item, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="p-4">{item.code}</td>
-                                            <td className="p-4">{item.date}</td>
-                                            <td className="p-4">{item.total}</td>
-                                            <td className="p-4">
-                                                <div className="flex justify-center">
-                                                    <span className={`rounded-full px-6 py-2 text-white shadow-md ${item.statusColor} min-w-[150px] leading-tight`}>
-                                                        {item.status}
-                                                    </span>
-                                                </div>
-                                            </td>
+                                    {loadingProductHistory ? (
+                                        <tr>
+                                            <td colSpan="4" className="p-8 text-center text-gray-500">Memuat riwayat pemesanan...</td>
                                         </tr>
-                                    ))}
+                                    ) : productHistory.length > 0 ? (
+                                        productHistory.map((item, index) => (
+                                            <tr key={index} className="hover:bg-gray-50">
+                                                <td className="p-4">{item.idPenjualan || item.id}</td>
+                                                <td className="p-4">{formatDate(item.tanggal)}</td>
+                                                <td className="p-4">{formatCurrency(item.totalHarga)}</td>
+                                                <td className="p-4">
+                                                    <div className="flex justify-center">
+                                                        <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} min-w-[150px] leading-tight capitalize`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="p-8 text-center text-gray-500">Belum ada riwayat pemesanan produk.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
 
                             <div className="mt-8 flex justify-start">
                                 <button
-                                    onClick={() => setActiveTab('profile')}
+                                    onClick={() => navigate('/profile')}
                                     className="flex items-center gap-2 font-bold text-[#4aa731] hover:underline"
                                 >
                                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
