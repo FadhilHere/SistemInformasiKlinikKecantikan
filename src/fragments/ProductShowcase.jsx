@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import ProductCard from '../components/molecules/ProductCard'
 
 const PRODUCTS = [
@@ -25,6 +26,8 @@ const PRODUCTS = [
 ]
 
 const ProductShowcase = () => {
+    const navigate = useNavigate()
+
   return (
     <section className="flex flex-col gap-8">
       <div className="text-center">
@@ -35,7 +38,11 @@ const ProductShowcase = () => {
 
       <div className="grid gap-6 md:grid-cols-3">
         {PRODUCTS.map((product) => (
-          <ProductCard key={product.name} {...product} />
+          <ProductCard 
+            key={product.name} 
+            {...product} 
+            onClick={() => navigate('/product')}
+          />
         ))}
       </div>
     </section>

@@ -1,6 +1,6 @@
 import Button from '../atoms/Button'
 
-const TreatmentCard = ({ name, description, image }) => {
+const TreatmentCard = ({ name, description, image, onClick }) => {
   return (
     <article className="flex h-[480px] w-[300px] flex-col overflow-hidden rounded-br-[40px] rounded-tl-[40px] bg-white shadow-lg transition-transform hover:-translate-y-1 hover:shadow-xl">
       <div className="h-[45%] w-full overflow-hidden">
@@ -18,7 +18,10 @@ const TreatmentCard = ({ name, description, image }) => {
           {description}
         </p>
         <div className="mt-auto pt-4">
-          <Button className="w-full rounded-full bg-[#4aa731] py-3 text-sm font-bold text-white hover:bg-[#3d8b28] shadow-button">
+          <Button 
+            className="w-full rounded-full bg-[#4aa731] py-3 text-sm font-bold text-white hover:bg-[#3d8b28] shadow-button"
+            onClick={onClick}
+          >
             Lihat Selengkapnya
           </Button>
         </div>

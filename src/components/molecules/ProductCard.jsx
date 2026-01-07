@@ -1,6 +1,6 @@
 import Button from '../atoms/Button'
 
-const ProductCard = ({ name, description, image }) => {
+const ProductCard = ({ name, description, image, onClick }) => {
   return (
     <article className="flex h-[500px] flex-col overflow-hidden rounded-br-[40px] rounded-tl-[40px] bg-white shadow-lg transition-transform hover:-translate-y-1">
       <div className="h-[70%] w-full overflow-hidden">
@@ -17,7 +17,10 @@ const ProductCard = ({ name, description, image }) => {
           {description}
         </p>
         <div className="mt-auto">
-          <Button className="rounded-full bg-[#4aa731] px-8 py-2 text-sm font-bold text-white shadow-lg hover:bg-[#3d8b28]">
+          <Button 
+            className="rounded-full bg-[#4aa731] px-8 py-2 text-sm font-bold text-white shadow-lg hover:bg-[#3d8b28]"
+            onClick={onClick}
+          >
             Lihat Produk
           </Button>
         </div>

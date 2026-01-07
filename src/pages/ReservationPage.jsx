@@ -89,10 +89,37 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
     )
 }
 
+const SuccessModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-[40px] bg-white p-8 text-center shadow-2xl">
+                <div className="mb-6 flex justify-center">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-[#53c41a]">
+                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+                <h3 className="mb-4 text-2xl font-bold text-gray-800">
+                    Reservasi Berhasil!
+                </h3>
+                <p className="mb-8 text-gray-600">
+                    Terima kasih telah melakukan reservasi. Kami menantikan kehadiran Anda.
+                </p>
+                <div className="flex justify-center">
+                    <button onClick={onClose} className="min-w-[120px] rounded-xl bg-[#53c41a] px-6 py-3 font-bold text-white transition hover:bg-[#4aa731]">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const ReservationPage = ({ isLoggedIn }) => {
     const [bookingStep, setBookingStep] = useState('schedule') // 'schedule' | 'detail'
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [showModal, setShowModal] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     // Data from API
     const [doctors, setDoctors] = useState([])
@@ -195,7 +222,8 @@ const ReservationPage = ({ isLoggedIn }) => {
 
             console.log("Success:", response)
             setShowModal(false)
-            alert('Reservasi Berhasil Dibuat!')
+            // alert('Reservasi Berhasil Dibuat!')
+            setShowSuccessModal(true)
             
             // Reset
             setBookingStep('schedule')
@@ -374,6 +402,11 @@ const ReservationPage = ({ isLoggedIn }) => {
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 onConfirm={handleConfirmReservation}
+            />
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
             />
 
             <Footer />

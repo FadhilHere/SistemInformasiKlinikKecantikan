@@ -103,7 +103,7 @@ const App = () => {
         ) : <Navigate to="/login" state={{ from: '/reservation' }} />
       } />
       
-      <Route path="/doctor-detail" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/doctor-detail/:id" element={<DoctorDetailPage isLoggedIn={isLoggedIn} />} />
       
       {/* Admin Routes */}
       <Route path="/dashboard" element={<AdminRoute><DashboardPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />

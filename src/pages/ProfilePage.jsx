@@ -158,6 +158,7 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
     const [selectedReservation, setSelectedReservation] = useState(null)
     const [newDate, setNewDate] = useState(new Date())
     const [selectedSlotId, setSelectedSlotId] = useState('')
+    const [selectedTreatment, setSelectedTreatment] = useState('Acne Treatment')
     const [availableSlots, setAvailableSlots] = useState([])
 
     // Fetch Reservations
@@ -208,16 +209,23 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
         if (isLoggedIn) fetchSlots()
     }, [isLoggedIn])
 
+    const treatments = [
+        { value: 'Acne Treatment', label: 'Acne Treatment' },
+        { value: 'Whitening Treatment', label: 'Whitening Treatment' },
+        { value: 'Anti Aging', label: 'Anti Aging' }
+    ]
+
     const handleEditClick = (reservation) => {
         setSelectedReservation(reservation)
-        setNewDate(reservation.tanggal ? new Date(reservation.tanggal) : new Date())
+        setNewDate(reservation.tanggalReservasi ? new Date(reservation.tanggalReservasi) : new Date())
         setSelectedSlotId(reservation.idJadwal || '')
+        setSelectedTreatment(reservation.jenisTreatment || 'Acne Treatment')
         setIsRescheduleModalOpen(true)
     }
 
     const handleSaveReschedule = async () => {
-        if (!selectedReservation || !newDate || !selectedSlotId) {
-             setStatusMessage({ type: 'error', text: 'Mohon lengkapi tanggal dan jam baru.' })
+        if (!selectedReservation || !newDate || !selectedSlotId || !selectedTreatment) {
+             setStatusMessage({ type: 'error', text: 'Mohon lengkapi Tanggal, Jam, dan Jenis Treatment.' })
              return
         }
 
@@ -229,9 +237,9 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                 body: JSON.stringify({
                     tanggalReservasi: formattedDate,
                     idJadwal: selectedSlotId,
-                    // Preserve other fields if backend requires them, but usually PUT accepts partial or we send what we change
+                    jenisTreatment: selectedTreatment,
+                    isRescheduled: true, // Mark as rescheduled
                     idDokter: selectedReservation.idDokter, 
-                    idTreatment: selectedReservation.idTreatment
                 })
             })
 
@@ -240,7 +248,7 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
             
             // Refresh List
             const response = await apiFetch('/api/reservasi')
-            const data = response.data || response
+            const data = response.data || response // Assuming backend returns updated list with isRescheduled
             if (Array.isArray(data)) {
                  setReservations(data)
             }
@@ -522,8 +530,15 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                             <tr key={index} className="hover:bg-gray-50">
                                                 <td className="p-4">R-{item.idReservasi}</td>
                                                 <td className="p-4">{formatDate(item.tanggalReservasi)}</td>
-                                                <td className="p-4">{item.schedule?.waktuMulai ? `${item.schedule.waktuMulai.slice(0,5)} - ${item.schedule.waktuSelesai.slice(0,5)}` : '-'}</td>
-                                                <td className="p-4">{item.treatment?.namaTreatment || '-'}</td>
+                                                <td className="p-4">
+                                                    {item.jadwal?.jamMulai 
+                                                        ? `${item.jadwal.jamMulai.slice(0,5)} - ${item.jadwal.jamSelesai.slice(0,5)}` 
+                                                        : (item.schedule?.waktuMulai 
+                                                            ? `${item.schedule.waktuMulai.slice(0,5)} - ${item.schedule.waktuSelesai.slice(0,5)}` 
+                                                            : '-')
+                                                    }
+                                                </td>
+                                                <td className="p-4">{item.jenisTreatment || item.treatment?.namaTreatment || '-'}</td>
                                                 <td className="p-4">
                                                     <div className="flex justify-center">
                                                         <span className={`rounded-full px-6 py-2 text-white shadow-md ${getStatusColor(item.status)} max-w-[200px] leading-tight capitalize`}>
@@ -533,7 +548,11 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex justify-center">
-                                                        {item.status === 'pending' || item.status === 'confirmed' ? ( // Example logic
+                                                        {item.isRescheduled ? (
+                                                            <button disabled className="cursor-not-allowed rounded-full bg-gray-400 px-4 py-2 text-white shadow-md text-xs">
+                                                                Tidak Bisa Mengubah Jadwal
+                                                            </button>
+                                                        ) : (item.status === 'pending' || item.status === 'confirmed') ? (
                                                             <button 
                                                                 onClick={() => handleEditClick(item)}
                                                                 className="rounded-full bg-[#c93a3a] px-6 py-2 text-white shadow-md transition hover:bg-[#a83030]"
@@ -587,6 +606,19 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                     </div>
                                     
                                     <div>
+                                        <label className="mb-1 block text-sm font-semibold text-gray-700">Jenis Treatment</label>
+                                        <select
+                                            value={selectedTreatment}
+                                            onChange={(e) => setSelectedTreatment(e.target.value)}
+                                            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
+                                        >
+                                            {treatments.map((t) => (
+                                                <option key={t.value} value={t.value}>{t.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
                                         <label className="mb-1 block text-sm font-semibold text-gray-700">Waktu (Slot)</label>
                                         <select
                                             value={selectedSlotId}
@@ -594,9 +626,22 @@ const ProfilePage = ({ isLoggedIn, onLogout, initialTab = 'profile' }) => {
                                             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-inner focus:border-[#4aa731]"
                                         >
                                             <option value="">Pilih Slot Waktu</option>
-                                            {availableSlots.map(slot => (
+                                            {availableSlots
+                                                .filter(slot => {
+                                                    // Filter logic: Exclude current slot if date is the same
+                                                    if (!selectedReservation || !newDate) return true
+                                                    
+                                                    const currentResDate = new Date(selectedReservation.tanggalReservasi).toDateString()
+                                                    const selectedNewDate = newDate.toDateString()
+                                                    
+                                                    if (currentResDate === selectedNewDate) {
+                                                        return slot.idJadwal !== selectedReservation.idJadwal
+                                                    }
+                                                    return true
+                                                })
+                                                .map(slot => (
                                                 <option key={slot.idJadwal} value={slot.idJadwal}>
-                                                    {slot.waktuMulai ? slot.waktuMulai.slice(0, 5) : slot.start_time} - {slot.waktuSelesai ? slot.waktuSelesai.slice(0, 5) : slot.end_time}
+                                                    {slot.jamMulai ? slot.jamMulai.slice(0, 5) : slot.waktuMulai || slot.start_time} - {slot.jamSelesai ? slot.jamSelesai.slice(0, 5) : slot.waktuSelesai || slot.end_time}
                                                 </option>
                                             ))}
                                         </select>
