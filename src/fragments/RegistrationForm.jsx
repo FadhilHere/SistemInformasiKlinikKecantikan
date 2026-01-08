@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import InputField from '../components/atoms/InputField'
 import Button from '../components/atoms/Button'
 import LogoIcon from '../components/atoms/LogoIcon'
+import AlertModal from './AlertModal'
 import { apiFetch } from '../lib/api'
 
 const FIELD_CONFIG = [
@@ -42,9 +44,47 @@ const INITIAL_FORM = {
 }
 
 const RegistrationForm = () => {
+  const navigate = useNavigate()
   const [formValues, setFormValues] = useState(INITIAL_FORM)
   const [statusMessage, setStatusMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successModalOpen, setSuccessModalOpen] = useState(false)
+
+  const passwordRules = [
+    {
+      id: 'length',
+      label: 'Minimal 8 karakter',
+      test: (value) => value.length >= 8
+    },
+    {
+      id: 'lowercase',
+      label: 'Huruf kecil (a-z)',
+      test: (value) => /[a-z]/.test(value)
+    },
+    {
+      id: 'uppercase',
+      label: 'Huruf besar (A-Z)',
+      test: (value) => /[A-Z]/.test(value)
+    },
+    {
+      id: 'number',
+      label: 'Angka (0-9)',
+      test: (value) => /\d/.test(value)
+    },
+    {
+      id: 'symbol',
+      label: 'Simbol (!@#$)',
+      test: (value) => /[^A-Za-z0-9]/.test(value)
+    }
+  ]
+
+  const passwordValue = formValues.password || ''
+  const passwordChecks = passwordRules.map((rule) => ({
+    ...rule,
+    passed: rule.test(passwordValue)
+  }))
+  const passwordScore = passwordChecks.filter((rule) => rule.passed).length
+  const isPasswordStrong = passwordScore >= 4
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -57,6 +97,10 @@ const RegistrationForm = () => {
     //   setStatusMessage('Password dan konfirmasi password harus sama.')
     //   return
     // }
+    if (!isPasswordStrong) {
+      setStatusMessage('Password belum cukup kuat. Lengkapi semua syarat.')
+      return
+    }
 
     try {
       setIsSubmitting(true)
@@ -77,7 +121,7 @@ const RegistrationForm = () => {
         })
       })
 
-      setStatusMessage('Registrasi berhasil. Silakan login.')
+      setSuccessModalOpen(true)
       setFormValues(INITIAL_FORM)
     } catch (error) {
       const message =
@@ -133,16 +177,49 @@ const RegistrationForm = () => {
               </div>
             </div>
           ) : (
-            <InputField
-              key={field.name}
-              label={field.label}
-              placeholder={field.placeholder}
-              type={field.type}
-              name={field.name}
-              value={formValues[field.name]}
-              onChange={handleChange}
-              allowToggle={field.allowToggle}
-            />
+            <div key={field.name} className="flex flex-col gap-2">
+              <InputField
+                label={field.label}
+                placeholder={field.placeholder}
+                type={field.type}
+                name={field.name}
+                value={formValues[field.name]}
+                onChange={handleChange}
+                allowToggle={field.allowToggle}
+              />
+              {field.name === 'password' && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-semibold text-gray-700">Kekuatan Password</span>
+                    <span className={isPasswordStrong ? 'text-green-600' : 'text-amber-600'}>
+                      {isPasswordStrong ? 'Kuat' : 'Perlu diperkuat'}
+                    </span>
+                  </div>
+                  <div className="mb-3 grid grid-cols-5 gap-1">
+                    {passwordRules.map((rule, index) => (
+                      <div
+                        key={rule.id}
+                        className={`h-1.5 rounded-full ${
+                          index < passwordScore ? 'bg-green-500' : 'bg-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="grid gap-1">
+                    {passwordChecks.map((rule) => (
+                      <div key={rule.id} className="flex items-center gap-2">
+                        <span className={rule.passed ? 'text-green-600' : 'text-gray-400'}>
+                          {rule.passed ? '✓' : '•'}
+                        </span>
+                        <span className={rule.passed ? 'text-green-700' : 'text-gray-500'}>
+                          {rule.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )
         ))}
 
@@ -153,11 +230,27 @@ const RegistrationForm = () => {
         )}
 
         <div className="col-span-full">
-          <Button type="submit" className="w-full md:w-fit" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full md:w-fit"
+            disabled={isSubmitting || !isPasswordStrong}
+          >
             {isSubmitting ? 'Memproses...' : 'Registrasi'}
           </Button>
         </div>
       </form>
+
+      <AlertModal
+        isOpen={successModalOpen}
+        title="Registrasi berhasil"
+        message="Akun kamu sudah dibuat. Silakan login untuk melanjutkan."
+        variant="success"
+        confirmLabel="Ke Login"
+        onClose={() => {
+          setSuccessModalOpen(false)
+          navigate('/login')
+        }}
+      />
     </section>
   )
 }

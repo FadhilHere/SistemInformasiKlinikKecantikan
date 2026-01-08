@@ -39,17 +39,18 @@ const LoginPage = ({ onLoginSuccess }) => {
         })
       })
 
-      // 1. Try to get user from login response
-      let user = data?.user || data?.data?.user
+      // Always fetch profile after login so role is accurate
+      let user = null
+      try {
+        const meRes = await apiFetch('/api/me')
+        user = meRes?.data?.user || meRes?.user || meRes?.data || meRes
+      } catch (e) {
+        console.error('Failed to fetch user profile:', e)
+      }
 
-      // 2. If user/role missing, fetch profile
-      if (!user || !user.role) {
-        try {
-            const meRes = await apiFetch('/api/me')
-            user = meRes.data || meRes.user || meRes
-        } catch (e) {
-            console.error('Failed to fetch user profile:', e)
-        }
+      if (!user) {
+        setStatusMessage('Login gagal. Silakan coba lagi.')
+        return
       }
 
       setStatusMessage('Login berhasil.')
@@ -68,48 +69,48 @@ const LoginPage = ({ onLoginSuccess }) => {
       <Navbar />
       <main className="flex justify-center px-4 py-14">
         <section className="flex w-full max-w-xl flex-col gap-6 rounded-[24px] bg-white px-8 py-12 shadow-card">
-      <div className="flex flex-col items-center text-center">
-        <LogoIcon size={72} className="mb-3" />
-        <div className="text-[32px] font-semibold">mische</div>
-        <p className="text-xs font-semibold tracking-[0.4em] text-brand/60">
-          AESTHETIC CLINIC
-        </p>
-      </div>
+          <div className="flex flex-col items-center text-center">
+            <LogoIcon size={72} className="mb-3" />
+            <div className="text-[32px] font-semibold">mische</div>
+            <p className="text-xs font-semibold tracking-[0.4em] text-brand/60">
+              AESTHETIC CLINIC
+            </p>
+          </div>
 
-      <div>
-        <h1 className="text-3xl font-semibold text-brand">Login</h1>
-        <p className="text-brand/70">
-          Masukkan email dan password yang terdaftar
-        </p>
-      </div>
+          <div>
+            <h1 className="text-3xl font-semibold text-brand">Login</h1>
+            <p className="text-brand/70">
+              Masukkan email dan password yang terdaftar
+            </p>
+          </div>
 
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        <InputField
-          label="Email"
-          type="email"
-          placeholder="Email"
-          name="email"
-          value={formValues.email}
-          onChange={handleChange}
-        />
-        <InputField
-          label="Password"
-          type="password"
-          placeholder="Password"
-          name="password"
-          value={formValues.password}
-          onChange={handleChange}
-          allowToggle
-        />
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            <InputField
+              label="Email"
+              type="email"
+              placeholder="Email"
+              name="email"
+              value={formValues.email}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Password"
+              type="password"
+              placeholder="Password"
+              name="password"
+              value={formValues.password}
+              onChange={handleChange}
+              allowToggle
+            />
 
-        {statusMessage && (
-          <span className="text-sm text-amber-600">{statusMessage}</span>
-        )}
+            {statusMessage && (
+              <span className="text-sm text-amber-600">{statusMessage}</span>
+            )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Memproses...' : 'Login'}
-        </Button>
-      </form>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Memproses...' : 'Login'}
+            </Button>
+          </form>
         </section>
       </main>
     </div>

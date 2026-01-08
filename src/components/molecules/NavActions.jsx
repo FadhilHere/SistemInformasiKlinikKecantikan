@@ -8,19 +8,30 @@ const NavActions = ({ isLoggedIn, userRole }) => {
   const navigate = useNavigate()
   const [resolvedRole, setResolvedRole] = useState(userRole || null)
 
+  const resolveRole = (user) => {
+    const role =
+      user?.role ||
+      user?.jenisUser ||
+      user?.tipe ||
+      user?.data?.role ||
+      user?.user?.role ||
+      null
+    return role ? String(role).toLowerCase() : null
+  }
+
   useEffect(() => {
     let isMounted = true
 
     const fetchRole = async () => {
       if (!isLoggedIn || userRole) {
-        setResolvedRole(userRole || null)
+        setResolvedRole(userRole ? String(userRole).toLowerCase() : null)
         return
       }
       try {
         const me = await apiFetch('/api/me')
-        const user = me?.data || me?.user || me
+        const user = me?.data?.user || me?.user || me?.data || me
         if (isMounted) {
-          setResolvedRole(user?.role || user?.jenisUser || user?.tipe || null)
+          setResolvedRole(resolveRole(user))
         }
       } catch (error) {
         if (isMounted) setResolvedRole(null)
