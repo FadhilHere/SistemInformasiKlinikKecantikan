@@ -64,12 +64,26 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $cookieName = env('JWT_COOKIE', 'jwt_token');
+        $isSecure = app()->environment('production');
+        $cookie = cookie(
+            $cookieName,
+            $token,
+            auth()->factory()->getTTL(),
+            '/',
+            null,
+            $isSecure,
+            true,
+            false,
+            'Lax'
+        );
+
         return response()->json([
             'success' => true,
             'token' => $token,
             'type' => 'Bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-        ]);
+        ])->withCookie($cookie);
     }
 
     public function me()
@@ -81,6 +95,9 @@ class AuthController extends Controller
     {
         auth()->logout();
 
-        return response()->json(['message' => 'Logout berhasil']);
+        $cookieName = env('JWT_COOKIE', 'jwt_token');
+
+        return response()->json(['message' => 'Logout berhasil'])
+            ->withCookie(cookie()->forget($cookieName));
     }
 }

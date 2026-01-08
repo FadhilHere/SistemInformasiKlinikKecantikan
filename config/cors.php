@@ -8,7 +8,10 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'paths' => ['api/*'],
+    'paths' => ['api/*', 'login', 'logout'],
+    'allowed_headers' => ['*'],
+    'supports_credentials' => true,
+
 
     'allowed_methods' => ['*'],
 
@@ -19,17 +22,9 @@ return [
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => [
-        'Content-Type',
-        'X-Requested-With',
-        'Authorization',
-        'Accept',
-        'Origin',
-    ],
 
     'exposed_headers' => [],
 
     'max_age' => 0,
-
-    'supports_credentials' => false, // JWT bearer → false
+    // JWT bearer → false
 ];
