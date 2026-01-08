@@ -60,8 +60,9 @@ const EventTable = () => {
         if (!selectedEvent) return;
         try {
             const formData = buildFormData(updatedEvent);
+            formData.append('_method', 'PUT');
             await apiFetch(`/api/event/${selectedEvent.idEvent || selectedEvent.id}`, {
-                method: 'PUT',
+                method: 'POST',
                 body: formData,
             });
             closeEditModal();
