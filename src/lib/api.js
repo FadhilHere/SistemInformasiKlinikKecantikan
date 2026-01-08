@@ -53,11 +53,25 @@ export const apiFetch = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      const status = response.status
+      const message = data?.message || 'Something went wrong'
+
+      if (
+        typeof window !== 'undefined' &&
+        (status === 401 || status === 403 || status >= 500)
+      ) {
+        window.dispatchEvent(
+          new CustomEvent('api:error', {
+            detail: { status, message, endpoint }
+          })
+        )
+      }
+
       // Create an error object that contains the response data
-      const error = new Error(data.message || "Something went wrong");
-      error.data = data;
-      error.status = response.status;
-      throw error;
+      const error = new Error(message)
+      error.data = data
+      error.status = status
+      throw error
     }
 
     return data;

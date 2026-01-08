@@ -29,7 +29,10 @@ import ScheduleReservationPage from './pages/ScheduleReservationPage'
 import ProductCategoryPage from './pages/ProductCategoryPage'
 import TestimonialManagementPage from './pages/TestimonialManagementPage'
 import ClinicProfilePage from './pages/ClinicProfilePage'
+import ErrorPage from './pages/ErrorPage'
 import { apiFetch } from './lib/api'
+import ErrorBoundary from './components/ErrorBoundary'
+import ApiErrorListener from './components/ApiErrorListener'
 
 const App = () => {
   // Initialize state based on token existence
@@ -103,7 +106,9 @@ const App = () => {
   }
 
   return (
-    <Routes>
+    <ErrorBoundary>
+      <ApiErrorListener />
+      <Routes>
       <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} userRole={userRole} />} />
       <Route path="/login" element={
         isLoggedIn ? <Navigate to={getLoginRedirect()} /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
@@ -159,10 +164,13 @@ const App = () => {
       <Route path="/categories" element={<AdminRoute><ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/testimonials" element={<AdminRoute><TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/clinic-profile" element={<AdminRoute><ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/unauthorized" element={<ErrorPage kind="unauthorized" />} />
+      <Route path="/forbidden" element={<ErrorPage kind="forbidden" />} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+      <Route path="*" element={<ErrorPage kind="not-found" />} />
+      </Routes>
+    </ErrorBoundary>
   )
 }
 
