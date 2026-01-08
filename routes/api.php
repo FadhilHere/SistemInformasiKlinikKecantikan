@@ -17,6 +17,7 @@ use App\Http\Controllers\ProfilPerusahaanController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\AuditLogController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -110,6 +111,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/promo', [PromoController::class, 'store']);
     Route::put('/promo/{id}', [PromoController::class, 'update']);
     Route::delete('/promo/{id}', [PromoController::class, 'destroy']);
+
+    // Audit logs - hanya admin
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
 
     // Bagian Hardy
     // CRUD kategori produk - hanya admin (dicek di controller)
