@@ -1,9 +1,37 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../atoms/Button'
 import CartIcon from '../atoms/icons/CartIcon'
+import { apiFetch } from '../../lib/api'
 
-const NavActions = ({ isLoggedIn }) => {
+const NavActions = ({ isLoggedIn, userRole }) => {
   const navigate = useNavigate()
+  const [resolvedRole, setResolvedRole] = useState(userRole || null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchRole = async () => {
+      if (!isLoggedIn || userRole) {
+        setResolvedRole(userRole || null)
+        return
+      }
+      try {
+        const me = await apiFetch('/api/me')
+        const user = me?.data || me?.user || me
+        if (isMounted) {
+          setResolvedRole(user?.role || user?.jenisUser || user?.tipe || null)
+        }
+      } catch (error) {
+        if (isMounted) setResolvedRole(null)
+      }
+    }
+
+    fetchRole()
+    return () => {
+      isMounted = false
+    }
+  }, [isLoggedIn, userRole])
 
   return (
     <div className="flex items-center gap-3">
@@ -20,12 +48,11 @@ const NavActions = ({ isLoggedIn }) => {
           variant="primary"
           className="flex items-center gap-2 !px-6"
           onClick={() => {
-              const role = localStorage.getItem('role')
-              if (role?.toLowerCase() === 'admin') {
-                  navigate('/dashboard')
-              } else {
-                  navigate('/profile')
-              }
+            if (resolvedRole?.toLowerCase() === 'admin') {
+              navigate('/dashboard')
+            } else {
+              navigate('/profile')
+            }
           }}
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">

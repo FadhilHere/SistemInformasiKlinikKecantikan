@@ -39,10 +39,6 @@ const LoginPage = ({ onLoginSuccess }) => {
         })
       })
 
-      if (data?.token) {
-        localStorage.setItem('token', data.token)
-      }
-
       // 1. Try to get user from login response
       let user = data?.user || data?.data?.user
 
@@ -56,14 +52,8 @@ const LoginPage = ({ onLoginSuccess }) => {
         }
       }
 
-      // 3. Save User Info
-      if (user) {
-        if (user.id) localStorage.setItem('userId', String(user.id))
-        if (user.role) localStorage.setItem('role', user.role)
-      }
-
       setStatusMessage('Login berhasil.')
-      if (onLoginSuccess) onLoginSuccess()
+      if (onLoginSuccess) onLoginSuccess(user)
     } catch (error) {
       console.error(error)
       const message = error?.data?.message || 'Email atau password salah.'

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegistrationPage from './pages/RegistrationPage'
@@ -29,44 +29,82 @@ import ScheduleReservationPage from './pages/ScheduleReservationPage'
 import ProductCategoryPage from './pages/ProductCategoryPage'
 import TestimonialManagementPage from './pages/TestimonialManagementPage'
 import ClinicProfilePage from './pages/ClinicProfilePage'
+import { apiFetch } from './lib/api'
 
 const App = () => {
   // Initialize state based on token existence
-  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'))
-  const [userRole, setUserRole] = useState(() => localStorage.getItem('role'))
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userRole, setUserRole] = useState(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true)
-    setUserRole(localStorage.getItem('role'))
+  const fetchMe = async () => {
+    try {
+      const me = await apiFetch('/api/me')
+      const user = me?.data || me?.user || me
+      if (user) {
+        setIsLoggedIn(true)
+        setUserRole(user.role || user.jenisUser || user.tipe || null)
+      } else {
+        setIsLoggedIn(false)
+        setUserRole(null)
+      }
+    } catch (error) {
+      setIsLoggedIn(false)
+      setUserRole(null)
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+    } catch {
+      // Ignore if storage is unavailable.
+    }
+    fetchMe()
+  }, [])
+
+  const handleLoginSuccess = async (user) => {
+    if (user) {
+      setIsLoggedIn(true)
+      setUserRole(user.role || user.jenisUser || user.tipe || null)
+      return
+    }
+    await fetchMe()
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('userId')
-    localStorage.removeItem('role')
+    apiFetch('/api/logout', { method: 'POST' }).catch(() => { })
+    try {
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+    } catch {
+      // Ignore if storage is unavailable.
+    }
     setIsLoggedIn(false)
     setUserRole(null)
   }
 
   // Helper for Admin Only Routes
   const AdminRoute = ({ children }) => {
+    if (isAuthLoading) return null
     if (!isLoggedIn) return <Navigate to="/login" />
     // Check state (or storage fallback) for robustness
-    const role = userRole || localStorage.getItem('role')
+    const role = userRole
     if (role?.toLowerCase() !== 'admin') return <Navigate to="/" />
     return children
   }
 
   // Redirect logic after login
   const getLoginRedirect = () => {
-    // Read directly from storage to ensure we have the latest value set by LoginPage
-    const role = localStorage.getItem('role')
-    return role?.toLowerCase() === 'admin' ? '/dashboard' : '/'
+    return userRole?.toLowerCase() === 'admin' ? '/dashboard' : '/'
   }
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/" element={<LandingPage isLoggedIn={isLoggedIn} userRole={userRole} />} />
       <Route path="/login" element={
         isLoggedIn ? <Navigate to={getLoginRedirect()} /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
       } />
@@ -100,7 +138,7 @@ const App = () => {
       <Route path="/reservation" element={
         isLoggedIn ? (
           // Redirect admin to admin reservation management page
-          (userRole || localStorage.getItem('role'))?.toLowerCase() === 'admin'
+          userRole?.toLowerCase() === 'admin'
             ? <Navigate to="/reservations" />
             : <ReservationPage isLoggedIn={isLoggedIn} />
         ) : <Navigate to="/login" state={{ from: '/reservation' }} />
