@@ -29,6 +29,7 @@ import ScheduleReservationPage from './pages/ScheduleReservationPage'
 import ProductCategoryPage from './pages/ProductCategoryPage'
 import TestimonialManagementPage from './pages/TestimonialManagementPage'
 import ClinicProfilePage from './pages/ClinicProfilePage'
+import AuditLogPage from './pages/AuditLogPage'
 import ErrorPage from './pages/ErrorPage'
 import { apiFetch } from './lib/api'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -164,6 +165,7 @@ const App = () => {
       <Route path="/categories" element={<AdminRoute><ProductCategoryPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/testimonials" element={<AdminRoute><TestimonialManagementPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/clinic-profile" element={<AdminRoute><ClinicProfilePage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
+      <Route path="/audit-logs" element={<AdminRoute><AuditLogPage isLoggedIn={isLoggedIn} onLogout={handleLogout} /></AdminRoute>} />
       <Route path="/unauthorized" element={<ErrorPage kind="unauthorized" />} />
       <Route path="/forbidden" element={<ErrorPage kind="forbidden" />} />
 

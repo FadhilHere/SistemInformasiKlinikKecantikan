@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ActivityModal from './ActivityModal';
 import DeleteModal from './DeleteModal';
+import AlertModal from './AlertModal';
 import { apiFetch } from '../lib/api';
 
 const ActivityGallery = () => {
@@ -11,6 +12,12 @@ const ActivityGallery = () => {
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
+    });
 
     const fetchActivities = async () => {
         try {
@@ -52,7 +59,12 @@ const ActivityGallery = () => {
             await fetchActivities();
         } catch (err) {
             setError(err?.data?.message || 'Gagal menambah kegiatan');
-            alert('Gagal menambah kegiatan');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal menambah kegiatan',
+                message: err?.data?.message || 'Terjadi kesalahan saat menambah kegiatan.',
+                variant: 'error'
+            });
         }
     };
 
@@ -71,7 +83,12 @@ const ActivityGallery = () => {
             await fetchActivities();
         } catch (err) {
             setError(err?.data?.message || 'Gagal memperbarui kegiatan');
-            alert('Gagal memperbarui kegiatan');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal memperbarui kegiatan',
+                message: err?.data?.message || 'Terjadi kesalahan saat memperbarui kegiatan.',
+                variant: 'error'
+            });
         }
     };
 
@@ -86,7 +103,12 @@ const ActivityGallery = () => {
             await fetchActivities();
         } catch (err) {
             setError(err?.data?.message || 'Gagal menghapus kegiatan');
-            alert('Gagal menghapus kegiatan');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal menghapus kegiatan',
+                message: err?.data?.message || 'Terjadi kesalahan saat menghapus kegiatan.',
+                variant: 'error'
+            });
         }
     };
 
@@ -226,6 +248,14 @@ const ActivityGallery = () => {
                 onClose={closeDeleteModal}
                 onConfirm={handleDelete}
                 itemType="kegiatan"
+            />
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

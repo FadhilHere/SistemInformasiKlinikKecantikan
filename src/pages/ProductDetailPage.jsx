@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../fragments/Navbar'
 import Button from '../components/atoms/Button'
+import AlertModal from '../fragments/AlertModal'
 import { apiFetch, API_BASE_URL } from '../lib/api'
 
 // Helper to generate a consistent placeholder image based on product data
@@ -30,6 +31,13 @@ const ProductDetailPage = ({ isLoggedIn }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [quantity, setQuantity] = useState(1)
+  const [alertConfig, setAlertConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  })
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -79,10 +87,21 @@ const ProductDetailPage = ({ isLoggedIn }) => {
           jumlahProduk: quantity
         })
       })
-      alert(`Berhasil menambahkan ${quantity} items ke keranjang!`)
-      navigate('/cart')
+      setShouldRedirect(true)
+      setAlertConfig({
+        isOpen: true,
+        title: 'Berhasil',
+        message: `Berhasil menambahkan ${quantity} item ke keranjang.`,
+        variant: 'success'
+      })
     } catch (error) {
-      alert(error?.data?.message || error?.message || 'Gagal menambahkan ke keranjang.')
+      setShouldRedirect(false)
+      setAlertConfig({
+        isOpen: true,
+        title: 'Gagal menambahkan',
+        message: error?.data?.message || error?.message || 'Gagal menambahkan ke keranjang.',
+        variant: 'error'
+      })
     }
   }
 
@@ -218,6 +237,20 @@ const ProductDetailPage = ({ isLoggedIn }) => {
         )}
 
       </main>
+
+      <AlertModal
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        variant={alertConfig.variant}
+        onClose={() => {
+          setAlertConfig((prev) => ({ ...prev, isOpen: false }))
+          if (shouldRedirect) {
+            setShouldRedirect(false)
+            navigate('/cart')
+          }
+        }}
+      />
     </div>
   )
 }

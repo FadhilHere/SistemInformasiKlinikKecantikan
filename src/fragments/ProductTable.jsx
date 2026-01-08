@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ProductModal from './ProductModal';
 import DeleteModal from './DeleteModal';
-import { apiFetch } from '../lib/api';
+import { apiFetch, API_BASE_URL } from '../lib/api';
 
 const ProductTable = () => {
     const [products, setProducts] = useState([]);
@@ -166,6 +166,13 @@ const ProductTable = () => {
         return `Rp ${parseInt(price).toLocaleString('id-ID')}`;
     };
 
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+        const sanitized = path.startsWith('/') ? path : `/${path}`;
+        return `${API_BASE_URL}/storage${sanitized}`;
+    };
+
     // Filter products based on search query and category
     const filteredProducts = products.filter((product) => {
         // Category filter - handle both string and number comparison
@@ -270,6 +277,7 @@ const ProductTable = () => {
                         <thead className="text-gray-500 border-b border-gray-100 bg-white">
                             <tr>
                                 <th className="py-4 px-6 font-medium w-16">No</th>
+                                <th className="py-4 px-6 font-medium">Gambar</th>
                                 <th className="py-4 px-6 font-medium">Nama</th>
                                 <th className="py-4 px-6 font-medium">Deskripsi</th>
                                 <th className="py-4 px-6 font-medium">Kategori</th>
@@ -282,6 +290,20 @@ const ProductTable = () => {
                             {filteredProducts.map((product, index) => (
                                 <tr key={product.idProduk || product.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                     <td className="py-4 px-6 text-gray-400">{index + 1}</td>
+                                    <td className="py-4 px-6">
+                                        {product.gambar ? (
+                                            <img
+                                                src={getImageUrl(product.gambar)}
+                                                alt={product.nama}
+                                                className="h-12 w-12 rounded-lg object-cover border border-gray-200"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="h-12 w-12 rounded-lg border border-dashed border-gray-200 flex items-center justify-center text-[10px] text-gray-400">
+                                                No image
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="py-4 px-6 font-medium text-gray-900">{product.nama}</td>
                                     <td className="py-4 px-6 text-gray-500 max-w-xs truncate">{product.deskripsi}</td>
                                     <td className="py-4 px-6 text-gray-500">{getCategoryName(product.idKategori)}</td>
@@ -313,7 +335,7 @@ const ProductTable = () => {
                             ))}
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="py-8 text-center text-gray-500">
+                                    <td colSpan="8" className="py-8 text-center text-gray-500">
                                         {searchQuery || categoryFilter ? 'Tidak ada produk yang sesuai dengan filter.' : 'Belum ada produk yang terdaftar.'}
                                     </td>
                                 </tr>

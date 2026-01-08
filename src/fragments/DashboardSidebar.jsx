@@ -115,6 +115,7 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
                     active={activeMenu === 'sales'}
                     onClick={() => handleNavigation('sales')}
                 />
+
                 <SidebarItem
                     icon={<UserIcon />}
                     label="Kelola Profil Dokter"
@@ -156,6 +157,12 @@ const DashboardSidebar = ({ onLogout, activeMenu = 'dashboard', onNavigate }) =>
                     label="Profil Klinik"
                     active={activeMenu === 'clinic-profile'}
                     onClick={() => handleNavigation('clinic-profile')}
+                />
+                <SidebarItem
+                    icon={<MessageIcon />}
+                    label="Audit Log"
+                    active={activeMenu === 'audit-logs'}
+                    onClick={() => handleNavigation('audit-logs')}
                 />
             </nav>
 

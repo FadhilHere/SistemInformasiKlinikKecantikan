@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PromoModal from './PromoModal';
 import DeleteModal from './DeleteModal';
+import AlertModal from './AlertModal';
 import { apiFetch } from '../lib/api';
 
 const PromoTable = () => {
@@ -13,6 +14,12 @@ const PromoTable = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedPromo, setSelectedPromo] = useState(null);
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
+    });
 
     // Fetch Promos
     const fetchPromos = async () => {
@@ -71,7 +78,12 @@ const PromoTable = () => {
             await fetchPromos();
         } catch (err) {
             setError(err?.data?.message || 'Gagal menambah promo');
-            alert('Gagal menambah promo: ' + (err?.data?.message || err.message));
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal menambah promo',
+                message: err?.data?.message || err.message || 'Terjadi kesalahan saat menambah promo.',
+                variant: 'error'
+            });
         }
     };
 
@@ -90,7 +102,12 @@ const PromoTable = () => {
             await fetchPromos();
         } catch (err) {
             setError(err?.data?.message || 'Gagal memperbarui promo');
-            alert('Gagal memperbarui promo: ' + (err?.data?.message || err.message));
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal memperbarui promo',
+                message: err?.data?.message || err.message || 'Terjadi kesalahan saat memperbarui promo.',
+                variant: 'error'
+            });
         }
     };
 
@@ -105,7 +122,12 @@ const PromoTable = () => {
             await fetchPromos();
         } catch (err) {
             setError(err?.data?.message || 'Gagal menghapus promo');
-            alert('Gagal menghapus promo: ' + (err?.data?.message || err.message));
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal menghapus promo',
+                message: err?.data?.message || err.message || 'Terjadi kesalahan saat menghapus promo.',
+                variant: 'error'
+            });
         }
     };
 
@@ -334,6 +356,14 @@ const PromoTable = () => {
                 onConfirm={handleDelete}
                 itemType="promo"
                 itemName={selectedPromo?.namaPromo}
+            />
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

@@ -55,10 +55,15 @@ export const apiFetch = async (endpoint, options = {}) => {
     if (!response.ok) {
       const status = response.status
       const message = data?.message || 'Something went wrong'
+      const method = (options.method || 'GET').toUpperCase()
+      const isAuthError = status === 401 || status === 403
+      const shouldNotify =
+        status >= 500 || (isAuthError && method === 'GET')
 
       if (
         typeof window !== 'undefined' &&
-        (status === 401 || status === 403 || status >= 500)
+        shouldNotify &&
+        endpoint !== '/api/login'
       ) {
         window.dispatchEvent(
           new CustomEvent('api:error', {

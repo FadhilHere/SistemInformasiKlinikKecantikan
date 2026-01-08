@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import AlertModal from './AlertModal';
 import { apiFetch } from '../lib/api';
 
 const EditProfileModal = ({ isOpen, onClose }) => {
@@ -13,6 +14,12 @@ const EditProfileModal = ({ isOpen, onClose }) => {
         password: ''
     });
     const [isLoading, setIsLoading] = useState(true);
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
+    });
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -48,8 +55,12 @@ const EditProfileModal = ({ isOpen, onClose }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        alert('Profil berhasil diperbarui!');
-        onClose();
+        setAlertConfig({
+            isOpen: true,
+            title: 'Berhasil',
+            message: 'Profil berhasil diperbarui!',
+            variant: 'success'
+        });
     };
 
     return (
@@ -206,6 +217,17 @@ const EditProfileModal = ({ isOpen, onClose }) => {
                     </div>
                 </form>
             </div>
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => {
+                    setAlertConfig((prev) => ({ ...prev, isOpen: false }));
+                    onClose();
+                }}
+            />
         </div>
     );
 };

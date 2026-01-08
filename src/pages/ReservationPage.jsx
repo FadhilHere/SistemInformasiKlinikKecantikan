@@ -5,6 +5,7 @@ import DatePicker, { registerLocale } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import Navbar from '../fragments/Navbar'
 import Footer from '../fragments/Footer'
+import AlertModal from '../fragments/AlertModal'
 import { apiFetch } from '../lib/api'
 
 registerLocale('id', id)
@@ -120,6 +121,12 @@ const ReservationPage = ({ isLoggedIn }) => {
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
+    })
 
     // Data from API
     const [doctors, setDoctors] = useState([])
@@ -199,7 +206,12 @@ const ReservationPage = ({ isLoggedIn }) => {
 
     const handleConfirmReservation = async () => {
         if (!customerName || !customerWa) {
-            alert('Mohon lengkapi Nama dan Nomor WhatsApp.')
+            setAlertConfig({
+                isOpen: true,
+                title: 'Data belum lengkap',
+                message: 'Mohon lengkapi Nama dan Nomor WhatsApp.',
+                variant: 'warning'
+            })
             return
         }
 
@@ -231,7 +243,12 @@ const ReservationPage = ({ isLoggedIn }) => {
 
         } catch (error) {
             console.error("Reservation failed", error)
-            alert(`Gagal membuat reservasi: ${error.message || 'Error'}`)
+            setAlertConfig({
+                isOpen: true,
+                title: 'Reservasi gagal',
+                message: `Gagal membuat reservasi: ${error.message || 'Error'}`,
+                variant: 'error'
+            })
             setShowModal(false)
         }
     }
@@ -407,6 +424,14 @@ const ReservationPage = ({ isLoggedIn }) => {
             <SuccessModal
                 isOpen={showSuccessModal}
                 onClose={() => setShowSuccessModal(false)}
+            />
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
             />
 
             <Footer />

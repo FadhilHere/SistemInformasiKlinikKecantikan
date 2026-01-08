@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import AlertModal from './AlertModal';
 
 const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,12 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
         nomorWa: '',
         password: '',
         confirmPassword: ''
+    });
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
     });
 
     // Helper function to convert date to yyyy-MM-dd format
@@ -68,7 +75,12 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
 
         // Validate password match if password is provided
         if (formData.password && formData.password !== formData.confirmPassword) {
-            alert('Password dan konfirmasi password tidak cocok!');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Password tidak cocok',
+                message: 'Password dan konfirmasi password tidak cocok.',
+                variant: 'warning'
+            });
             return;
         }
 
@@ -237,6 +249,14 @@ const UserModal = ({ isOpen, onClose, mode = 'add', initialData, onSubmit }) => 
                     </div>
                 </form>
             </div>
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };

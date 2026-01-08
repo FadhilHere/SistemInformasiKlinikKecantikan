@@ -298,17 +298,20 @@ const SalesTable = () => {
                                     <td className="py-4 px-6 text-gray-500 whitespace-nowrap">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(sale.status)}`}>
                                             {sale.status}
-                                            <button
-                                                onClick={() => openStatusModal(sale)}
-                                                className="text-blue-500 hover:text-blue-700 text-xs font-semibold px-2 py-1 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
-                                            >
-                                                Set Status
-                                            </button>
                                         </span>
                                     </td>
                                     <td className="py-4 px-6 text-center">
-                                        <div className="flex items-center justify-center gap-2">
-
+                                        <div className="flex items-center justify-center gap-3">
+                                            <button
+                                                onClick={() => openStatusModal(sale)}
+                                                className="text-blue-500 hover:text-blue-700"
+                                                title="Set Status"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="9"></circle>
+                                                    <path d="M9 12l2 2 4-4"></path>
+                                                </svg>
+                                            </button>
                                             <button
                                                 onClick={() => openDeleteModal(sale)}
                                                 className="text-red-500 hover:text-red-700"

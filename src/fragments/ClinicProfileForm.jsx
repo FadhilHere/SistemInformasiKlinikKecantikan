@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../components/atoms/Button';
+import DeleteModal from './DeleteModal';
+import AlertModal from './AlertModal';
 import { apiFetch, API_BASE_URL } from '../lib/api';
 
 const ClinicProfileForm = () => {
@@ -16,6 +18,13 @@ const ClinicProfileForm = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [profileId, setProfileId] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        variant: 'info'
+    });
 
     const fetchProfile = async () => {
         try {
@@ -98,54 +107,85 @@ const ClinicProfileForm = () => {
                     method: 'POST',
                     body: formDataToSend,
                 });
-                alert('Informasi klinik berhasil diperbarui!');
+                setAlertConfig({
+                    isOpen: true,
+                    title: 'Berhasil',
+                    message: 'Informasi klinik berhasil diperbarui!',
+                    variant: 'success'
+                });
             } else {
                 // Create new profile
                 await apiFetch('/api/profil-perusahaan', {
                     method: 'POST',
                     body: formDataToSend,
                 });
-                alert('Profil klinik berhasil ditambahkan!');
+                setAlertConfig({
+                    isOpen: true,
+                    title: 'Berhasil',
+                    message: 'Profil klinik berhasil ditambahkan!',
+                    variant: 'success'
+                });
             }
 
             await fetchProfile();
         } catch (err) {
             setError(err?.data?.message || 'Gagal memperbarui profil');
-            alert('Gagal memperbarui profil: ' + (err?.data?.message || 'Terjadi kesalahan'));
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal memperbarui profil',
+                message: err?.data?.message || 'Terjadi kesalahan',
+                variant: 'error'
+            });
         }
     };
 
-    const handleDelete = async () => {
+    const handleDeleteRequest = () => {
         if (!profileId) {
-            alert('Tidak ada profil untuk dihapus');
+            setAlertConfig({
+                isOpen: true,
+                title: 'Tidak ada profil',
+                message: 'Tidak ada profil untuk dihapus.',
+                variant: 'warning'
+            });
             return;
         }
 
-        window.history.pushState({}, '', `/api/profil-perusahaan/${profileId}`);
-        const confirmed = window.confirm('Apakah Anda yakin ingin menghapus profil ini?');
-        window.history.pushState({}, '', '/clinic-profile');
+        setIsDeleteModalOpen(true);
+    };
 
-        if (confirmed) {
-            try {
-                await apiFetch(`/api/profil-perusahaan/${profileId}`, {
-                    method: 'DELETE',
-                });
-                setProfileId(null);
-                setFormData({
-                    visi: '',
-                    misi: '',
-                    deskripsiPerusahaan: '',
-                    nomorCustomerService: '',
-                    jamBukak: '',
-                    jamKeluar: '',
-                    gambarFile: null
-                });
-                setPhotoPreview('');
-                alert('Profil berhasil dihapus!');
-            } catch (err) {
-                setError(err?.data?.message || 'Gagal menghapus profil');
-                alert('Gagal menghapus profil');
-            }
+    const handleDeleteConfirm = async () => {
+        if (!profileId) return;
+        try {
+            await apiFetch(`/api/profil-perusahaan/${profileId}`, {
+                method: 'DELETE',
+            });
+            setProfileId(null);
+            setFormData({
+                visi: '',
+                misi: '',
+                deskripsiPerusahaan: '',
+                nomorCustomerService: '',
+                jamBukak: '',
+                jamKeluar: '',
+                gambarFile: null
+            });
+            setPhotoPreview('');
+            setIsDeleteModalOpen(false);
+            setAlertConfig({
+                isOpen: true,
+                title: 'Berhasil',
+                message: 'Profil berhasil dihapus!',
+                variant: 'success'
+            });
+        } catch (err) {
+            setError(err?.data?.message || 'Gagal menghapus profil');
+            setIsDeleteModalOpen(false);
+            setAlertConfig({
+                isOpen: true,
+                title: 'Gagal menghapus profil',
+                message: err?.data?.message || 'Terjadi kesalahan',
+                variant: 'error'
+            });
         }
     };
 
@@ -274,7 +314,7 @@ const ClinicProfileForm = () => {
                     {profileId && (
                         <button
                             type="button"
-                            onClick={handleDelete}
+                            onClick={handleDeleteRequest}
                             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium"
                         >
                             Hapus
@@ -282,6 +322,21 @@ const ClinicProfileForm = () => {
                     )}
                 </div>
             </div>
+
+            <DeleteModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                itemType="profil"
+            />
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                variant={alertConfig.variant}
+                onClose={() => setAlertConfig((prev) => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };
